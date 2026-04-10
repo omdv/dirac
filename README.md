@@ -47,36 +47,39 @@ Dirac is benchmarked against other leading open-source agents on complex, real-w
 Install Dirac from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=dirac-run.dirac).
 
 ### CLI (Terminal)
-Install the Dirac CLI on macOS or Linux using our official installation script:
+Install the Dirac CLI globally using npm:
+```bash
+npm install -g dirac-cli
+```
+
+Alternatively, use our official installation script (macOS/Linux):
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dirac-run/dirac/master/scripts/install.sh | bash
 ```
 
-
 ## 🚀 CLI Quick Start 
 
-This is still being fixed. Meanwhile you can download the source and build manually.
-
-```bash
-git clone https://github.com/dirac-run/dirac.git
-cd dirac
-npm install
-npm run cli:build
-npm run cli:link
-```
-
-1. **Install**:
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/dirac-run/dirac/master/scripts/install.sh | bash
-   ```
-2. **Authenticate**:
+1. **Authenticate**:
    ```bash
    dirac auth
    ```
-3. **Run your first task**:
+2. **Run your first task**:
    ```bash
    dirac "Analyze the architecture of this project"
    ```
+
+### Configuration (Environment Variables)
+You can provide API keys via environment variables to skip the `dirac auth` step. This is ideal for CI/CD or non-persistent environments:
+
+- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `OPENROUTER_API_KEY`
+- `GEMINI_API_KEY`
+- `GROQ_API_KEY`
+- `MISTRAL_API_KEY`
+- `XAI_API_KEY` (x.ai)
+- `HF_TOKEN` (HuggingFace)
+- ... and others (see `src/shared/storage/env-config.ts` for the full list).
 
 ### Common Commands
 - `dirac "prompt"`: Start an interactive task.

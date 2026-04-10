@@ -76,6 +76,20 @@ Toggle to Plan Mode to discuss implementation and architecture with Dirac. He'll
 
 Get the same Dirac experience with enterprise-grade controls: SSO (SAML/OIDC), global policies and configuration, observability with audit trails, private networking (VPC/private link), and self-hosted or on-prem deployments, and enterprise support. Learn more at our [enterprise page](https://dirac.run/enterprise) or [talk to us](https://dirac.run/contact-sales).
 
+## Configuration (Environment Variables)
+You can also provide API keys via environment variables to skip the `dirac auth` step:
+
+- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `OPENROUTER_API_KEY`
+- `GEMINI_API_KEY`
+- `GROQ_API_KEY`
+- `MISTRAL_API_KEY`
+- `XAI_API_KEY` (x.ai)
+- `HF_TOKEN` (HuggingFace)
+- ... and others (see `src/shared/storage/env-config.ts` for the full list).
+
+
 ## License
 
 [Apache 2.0 © 2026 Dirac Bot Inc.](./LICENSE)

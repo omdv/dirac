@@ -116,7 +116,8 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 						? autoApproveResult[0]
 						: false
 
-			if (!config.isSubagentExecution && !(isSafe || autoApproveEnabled)) {
+			const isYolo = config.yoloModeToggled || config.services.stateManager.getGlobalSettingsKey("autoApproveAllToggled")
+			if (!config.isSubagentExecution && !(isYolo || (isSafe && autoApproveEnabled))) {
 				commandsRequiringApproval.push(actualCommand)
 				cmdState.requiresApproval = true
 			}
@@ -271,7 +272,8 @@ export class ExecuteCommandToolHandler implements IFullyManagedTool {
 			const autoApproveEnabled = Array.isArray(autoApproveResult) ? autoApproveResult[0] : autoApproveResult
 
 			let didAutoApprove = false
-			if (config.isSubagentExecution || isSafe || autoApproveEnabled) {
+			const isYolo = config.yoloModeToggled || config.services.stateManager.getGlobalSettingsKey("autoApproveAllToggled")
+			if (config.isSubagentExecution || isYolo || (isSafe && autoApproveEnabled)) {
 				didAutoApprove = true
 				cmdState.wasAutoApproved = true
 			} else if (globalApprovalGranted) {

@@ -1,5 +1,10 @@
 # Dirac - Accurate & Highly Token Efficient Open Source AI Agent
 
+<p align="center">
+  <img src="https://github.com/dirac-run/dirac/blob/master/assets/media/diraccli.png?raw=true" width="70%" />
+</p>
+
+
 It is a well studied phenomenon that any given model's reasoning ability degrades with the context length. If we can keep context tightly curated, we improve both accuracy and cost while making larger changes tractable in a single task. 
 
 Dirac is an open-source coding agent built with this in mind. It reduces API costs by **64.8%** on average while producing better and faster work. Using hash-anchored parallel edits, AST manipulation, and a suite of advanced optimizations. Oh, and no MCP.

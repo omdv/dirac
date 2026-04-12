@@ -70,6 +70,7 @@ export async function updateSettings(controller: Controller, request: UpdateSett
 		if (request.mode !== undefined) {
 			const mode = request.mode === PlanActMode.PLAN ? "plan" : "act"
 			controller.stateManager.setGlobalState("mode", mode)
+			controller.stateManager.setSessionOverride("mode", mode)
 		}
 
 		if (request.preferredLanguage !== undefined) {

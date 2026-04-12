@@ -99,6 +99,7 @@ export async function updateSettingsCli(controller: Controller, request: UpdateS
 			if (mode !== undefined) {
 				const converted = convertPlanActMode(mode)
 				controller.stateManager.setGlobalState("mode", converted)
+				controller.stateManager.setSessionOverride("mode", converted)
 			}
 
 			if (customPrompt === "compact") {

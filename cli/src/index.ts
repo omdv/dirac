@@ -132,13 +132,15 @@ async function applyTaskOptions(options: TaskOptions): Promise<void> {
 
 	// Apply model override if specified
 	if (options.model) {
-		const selectedMode = (stateManager.getGlobalSettingsKey("mode") ?? "act") as "act" | "plan"
-		const providerKey = selectedMode === "act" ? "actModeApiProvider" : "planModeApiProvider"
-		const currentProvider = stateManager.getGlobalSettingsKey(providerKey) as ApiProvider
-		const modelKey = getProviderModelIdKey(currentProvider, selectedMode)
-		if (modelKey) {
-			stateManager.setSessionOverride(modelKey, options.model)
-		}
+		const currentMode = (stateManager.getGlobalSettingsKey("mode") || "act") as "act" | "plan"
+		await setModeScopedState(currentMode, (mode) => {
+			const providerKey = mode === "act" ? "actModeApiProvider" : "planModeApiProvider"
+			const currentProvider = stateManager.getGlobalSettingsKey(providerKey) as ApiProvider
+			const modelKey = getProviderModelIdKey(currentProvider, mode)
+			if (modelKey) {
+				stateManager.setSessionOverride(modelKey, options.model!)
+			}
+		})
 		telemetryService.captureHostEvent("model_flag", options.model)
 	}
 

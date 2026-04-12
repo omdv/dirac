@@ -256,6 +256,7 @@ export class Controller {
 
 		// Switch to act mode
 		this.stateManager.setGlobalState("mode", modeToSwitchTo)
+		this.stateManager.setSessionOverride("mode", modeToSwitchTo)
 
 		// Update API handler with new mode (buildApiHandler now selects provider based on mode)
 		if (this.task) {
@@ -277,6 +278,7 @@ export class Controller {
 
 		// Store mode to global state
 		this.stateManager.setGlobalState("mode", modeToSwitchTo)
+		this.stateManager.setSessionOverride("mode", modeToSwitchTo)
 
 		// Capture mode switch telemetry | Capture regardless of if we know the taskId
 		telemetryService.captureModeSwitch(this.task?.ulid ?? "0", modeToSwitchTo)

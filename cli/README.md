@@ -4,6 +4,13 @@
   <img src="https://github.com/dirac-run/dirac/blob/master/assets/media/diraccli.png?raw=true" width="70%" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/dirac-run/dirac"><strong>GitHub</strong></a> |
+  <a href="https://www.npmjs.com/package/dirac-cli"><strong>NPM</strong></a> |
+  <a href="https://discord.gg/dirac"><strong>Discord</strong></a>
+</p>
+
+
 
 It is a well studied phenomenon that any given model's reasoning ability degrades with the context length. If we can keep context tightly curated, we improve both accuracy and cost while making larger changes tractable in a single task. 
 

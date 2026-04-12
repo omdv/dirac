@@ -111,14 +111,36 @@ async function copyCliDist() {
 }
 
 /**
- * Copy package.json from cli/ directory
+ * Copy package.json from cli/ directory and clean it up for publishing
  */
 async function copyPackageJson() {
-	console.log("Copying package.json...")
-	const source = path.join(CLI_DIR, "package.json")
-	const dest = path.join(BUILD_DIR, "package.json")
-	await cpr(source, dest)
-	console.log(`✓ package.json copied`)
+	console.log("Copying and cleaning package.json...")
+	const sourcePath = path.join(CLI_DIR, "package.json")
+	const destPath = path.join(BUILD_DIR, "package.json")
+
+	const packageJson = JSON.parse(fs.readFileSync(sourcePath, "utf-8"))
+
+	// Remove scripts that are not needed in the published package
+	// and would cause npm publish to fail in a standalone directory
+	if (packageJson.scripts) {
+		delete packageJson.scripts.prepare
+		delete packageJson.scripts.build
+		delete packageJson.scripts.typecheck
+		delete packageJson.scripts["build:production"]
+		delete packageJson.scripts["build:types"]
+		delete packageJson.scripts.watch
+		delete packageJson.scripts.dev
+		delete packageJson.scripts.link
+		delete packageJson.scripts.unlink
+
+		// Keep only essential scripts if any
+		if (Object.keys(packageJson.scripts).length === 0) {
+			delete packageJson.scripts
+		}
+	}
+
+	fs.writeFileSync(destPath, JSON.stringify(packageJson, null, 2))
+	console.log("✓ package.json copied and cleaned")
 }
 
 /**

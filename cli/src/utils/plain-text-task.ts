@@ -58,6 +58,7 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 	let hasEmittedTaskStarted = false
 	// Track which messages have been processed (by timestamp)
 	const processedMessages = new Map<number, string>()
+	const streamedMessages = new Set<number>()
 	const lastProcessedPartialText = new Map<number, string>()
 
 	const isViewTaskOnly = Boolean(options.taskId) && !prompt
@@ -88,40 +89,57 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 
 		// In verbose mode, we want to see partial messages if the text has changed
 		if (verbose && message.partial) {
-			if (lastProcessedPartialText.get(ts) === text) {
+			const lastText = lastProcessedPartialText.get(ts) || ""
+			if (lastText === text) {
 				return
 			}
+			const delta = text.slice(lastText.length)
+			const isFirstDelta = !streamedMessages.has(ts)
+			streamedMessages.add(ts)
 			lastProcessedPartialText.set(ts, text)
+
+			handleMessageForPipeMode(message, verbose || false, yolo || false, { delta, isFirstDelta })
 		} else if (message.partial || (processedMessages.has(ts) && processedMessages.get(ts) === text)) {
 			return
-		}
-
-		// JSON mode: stream all messages to stdout (existing behavior)
-		if (jsonOutput) {
-			process.stdout.write(JSON.stringify(message) + "\n")
 		} else {
-			handleMessageForPipeMode(message, verbose || false, yolo || false)
-		}
-
-		// Auto-approve if yolo mode is on and it's an approval request
-		if (!message.partial && yolo && message.type === "ask" && (message.ask === "tool" || message.ask === "command" || message.ask === "browser_action_launch" || message.ask === "plan_mode_respond" || message.ask === "act_mode_respond")) {
-			if (verbose) {
-				process.stderr.write(`[yolo] Auto-approving ${message.ask}\n`)
+			// JSON mode: stream all messages to stdout (existing behavior)
+			if (jsonOutput) {
+				process.stdout.write(JSON.stringify(message) + "\n")
+			} else {
+				const wasStreamed = streamedMessages.has(ts)
+				handleMessageForPipeMode(
+					message,
+					verbose || false,
+					yolo || false,
+					wasStreamed ? { isLastDelta: true } : undefined,
+				)
 			}
-			controller.task?.handleWebviewAskResponse("yesButtonClicked")
-		}
 
-		processedMessages.set(ts, message.text ?? "")
+			processedMessages.set(ts, message.text ?? "")
 
-		// Check for completion (only on non-partial messages)
-		// When resuming a task, only consider completion_result messages that appeared
-		// AFTER we sent our resume message (ts > completionCutoffTs)
-		if (message.say === "completion_result" || message.ask === "completion_result") {
-			if (isViewTaskOnly || ts > completionCutoffTs) {
-				completionResolve()
+			// Auto-approve if yolo mode is on and it's an approval request
+			if (
+				yolo &&
+				message.type === "ask" &&
+				(message.ask === "tool" ||
+					message.ask === "command" ||
+					message.ask === "browser_action_launch" ||
+					message.ask === "plan_mode_respond" ||
+					message.ask === "act_mode_respond")
+			) {
+				controller.task?.handleWebviewAskResponse("yesButtonClicked")
 			}
-		} else if (message.say === "error" || message.ask === "api_req_failed") {
-			completionReject(message.text ?? "message.say error || message.ask api_req_failed")
+
+			// Check for completion (only on non-partial messages)
+			// When resuming a task, only consider completion_result messages that appeared
+			// AFTER we sent our resume message (ts > completionCutoffTs)
+			if (message.say === "completion_result" || message.ask === "completion_result") {
+				if (isViewTaskOnly || ts > completionCutoffTs) {
+					completionResolve()
+				}
+			} else if (message.say === "error" || message.ask === "api_req_failed") {
+				completionReject(message.text ?? "message.say error || message.ask api_req_failed")
+			}
 		}
 	}
 
@@ -138,7 +156,8 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 			} catch (error) {
 				if (jsonOutput) {
 					process.stdout.write(
-						JSON.stringify({ type: "error", message: error instanceof Error ? error.message : String(error) }) + "\n",
+						JSON.stringify({ type: "error", message: error instanceof Error ? error.message : String(error) }) +
+							"\n",
 					)
 				} else {
 					process.stderr.write(`Error: ${error instanceof Error ? error.message : String(error)}\n`)
@@ -175,7 +194,9 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 		// Wait for task completion, with optional timeout only when explicitly configured
 		if (options.timeoutSeconds) {
 			const timeoutMs = options.timeoutSeconds * 1000
-			const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeoutMs))
+			const timeoutPromise = new Promise((_, reject) =>
+				setTimeout(() => reject(new Error("Timeout")), timeoutMs),
+			)
 			await Promise.race([completionPromise, timeoutPromise])
 		} else {
 			await completionPromise
@@ -194,12 +215,14 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 
 	// non json mode outputs only the final complete message
 	// (it should be the completion_result message)
-	if (!jsonOutput && !verbose) {
+	if (!jsonOutput) {
 		const msg = Array.from(processedMessages.entries())
 			.sort(([aTs], [bTs]) => aTs - bTs)
 			.map(([_, msg]) => msg)
 			.at(-1)
-		process.stdout.write(msg + "\n")
+		if (msg) {
+			process.stdout.write(msg + "\n")
+		}
 	}
 
 	// Print final summary if verbose or yolo
@@ -209,7 +232,9 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 		if (metrics.totalTokensIn > 0 || metrics.totalCost > 0) {
 			process.stderr.write(`\n${"-".repeat(40)}\n`)
 			process.stderr.write(`Task Summary:\n`)
-			process.stderr.write(`Tokens: ${metrics.totalTokensIn.toLocaleString()} in, ${metrics.totalTokensOut.toLocaleString()} out\n`)
+			process.stderr.write(
+				`Tokens: ${metrics.totalTokensIn.toLocaleString()} in, ${metrics.totalTokensOut.toLocaleString()} out\n`,
+			)
 			if (metrics.totalCacheReads || metrics.totalCacheWrites) {
 				process.stderr.write(
 					`Cache: ${(metrics.totalCacheReads || 0).toLocaleString()} read, ${(metrics.totalCacheWrites || 0).toLocaleString()} write\n`,
@@ -222,7 +247,6 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
 		}
 	}
 
-
 	return !hasError
 }
 
@@ -233,7 +257,12 @@ export async function runPlainTextTask(options: PlainTextTaskOptions): Promise<b
  * - Verbose output goes to stderr
  * - Nothing else goes to stdout (stdout is reserved for final result only)
  */
-function handleMessageForPipeMode(message: DiracMessage, verbose: boolean, yolo: boolean): void {
+function handleMessageForPipeMode(
+	message: DiracMessage,
+	verbose: boolean,
+	yolo: boolean,
+	streaming?: { delta?: string; isFirstDelta?: boolean; isLastDelta?: boolean },
+): void {
 	const fullText = message.text ?? ""
 	const reasoning = message.reasoning ?? ""
 	const isPartial = message.partial ?? false
@@ -247,18 +276,59 @@ function handleMessageForPipeMode(message: DiracMessage, verbose: boolean, yolo:
 			// Verbose output goes to stderr so it doesn't interfere with piped stdout
 			if (message.say === "task") {
 				process.stderr.write(`${statusPrefix}${fullText}\n`)
-			} else if (message.say === "text" && fullText) {
-				process.stderr.write(`${statusPrefix}${fullText}\n`)
-			} else if (message.say === "api_req_started") {
-				process.stderr.write(`${statusPrefix}API request started\n`)
-			} else if (message.say === "api_req_finished") {
-				process.stderr.write(`${statusPrefix}API request finished\n`)
+			} else if (message.say === "text" && (fullText || streaming?.isLastDelta)) {
+				if (streaming?.delta !== undefined) {
+					if (streaming.isFirstDelta) {
+						process.stderr.write(`${statusPrefix}${streaming.delta}`)
+					} else {
+						process.stderr.write(streaming.delta)
+					}
+				} else if (streaming?.isLastDelta) {
+					process.stderr.write("\n")
+				} else {
+					process.stderr.write(`${statusPrefix}${fullText}\n`)
+				}
+			} else if (message.say === "api_req_started" || message.say === "api_req_finished") {
+				const label = message.say === "api_req_started" ? "API request started" : "API request finished"
+				try {
+					const info = JSON.parse(fullText || "{}")
+					if (info.cost !== undefined || info.tokensIn !== undefined) {
+						const costStr = info.cost !== undefined ? `Cost: $${info.cost.toFixed(4)}` : ""
+						const tokensStr =
+							info.tokensIn !== undefined
+								? `Tokens: ${info.tokensIn.toLocaleString()} in, ${info.tokensOut.toLocaleString()} out`
+								: ""
+						const cacheStr =
+							info.cacheReadTokens !== undefined || info.cacheWriteTokens !== undefined
+								? ` (Cache: ${(info.cacheReadTokens || 0).toLocaleString()} read, ${(info.cacheWriteTokens || 0).toLocaleString()} write)`
+								: ""
+						const contextStr =
+							info.contextWindow !== undefined
+								? ` | Context: ${info.contextUsagePercentage}% of ${(info.contextWindow / 1000).toFixed(0)}K`
+								: ""
+						process.stderr.write(`${statusPrefix}${label} [${tokensStr}${cacheStr}${contextStr} | ${costStr}]\n`)
+					} else {
+						process.stderr.write(`${statusPrefix}${label}\n`)
+					}
+				} catch {
+					process.stderr.write(`${statusPrefix}${label}\n`)
+				}
 			} else if (message.say === "completion_result" && fullText) {
 				process.stderr.write(`${statusPrefix}Completion Result: ${fullText}\n`)
-			} else if (message.say === "reasoning" || reasoning) {
-				const content = fullText || reasoning
-				if (content) {
-					process.stderr.write(`${statusPrefix}Reasoning: ${content}\n`)
+			} else if (message.say === "reasoning" || reasoning || streaming?.isLastDelta) {
+				const content = streaming?.delta !== undefined ? streaming.delta : (fullText || reasoning)
+				if (content || streaming?.isLastDelta) {
+					if (streaming?.delta !== undefined) {
+						if (streaming.isFirstDelta) {
+							process.stderr.write(`${statusPrefix}Reasoning: ${content}`)
+						} else {
+							process.stderr.write(content)
+						}
+					} else if (streaming?.isLastDelta) {
+						process.stderr.write("\n")
+					} else {
+						process.stderr.write(`${statusPrefix}Reasoning: ${content}\n`)
+					}
 				}
 			} else if (message.say === "tool") {
 				process.stderr.write(`${statusPrefix}Tool Call: ${fullText}\n`)
@@ -277,15 +347,23 @@ function handleMessageForPipeMode(message: DiracMessage, verbose: boolean, yolo:
 		if (message.ask === "api_req_failed") {
 			// Errors always go to stderr
 			process.stderr.write(`${statusPrefix}Error: API request failed: ${fullText}\n`)
+		} else if (
+			yolo &&
+			(message.ask === "tool" ||
+				message.ask === "command" ||
+				message.ask === "browser_action_launch" ||
+				message.ask === "plan_mode_respond" ||
+				message.ask === "act_mode_respond")
+		) {
+			// In yolo mode, we auto-approve everything that requires it
+			if (verbose) {
+				process.stderr.write(`${statusPrefix}[yolo] Auto-approving ${message.ask}: ${fullText}\n`)
+			}
 		} else if (message.ask === "tool" || message.ask === "command" || message.ask === "browser_action_launch") {
 			// These require approval - warn via stderr
-			if (yolo) {
-				if (verbose) {
-					process.stderr.write(`${statusPrefix}[yolo] Auto-approving ${message.ask}: ${fullText}\n`)
-				}
-			} else {
-				process.stderr.write(`${statusPrefix}Waiting for approval (use --yolo for auto-approve): ${message.ask}: ${fullText}\n`)
-			}
+			process.stderr.write(
+				`${statusPrefix}Waiting for approval (use --yolo for auto-approve): ${message.ask}: ${fullText}\n`,
+			)
 		} else if (verbose) {
 			// Verbose output goes to stderr
 			if (message.ask === "plan_mode_respond" || message.ask === "act_mode_respond") {

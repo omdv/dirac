@@ -107,23 +107,7 @@ export class EnvironmentManager {
 
 		// Workspace roots (multi-root)
 		details += this.formatWorkspaceRootsSection()
-
-		// Add recently modified files section
-		const recentlyModifiedFiles = this.fileContextTracker.getAndClearRecentlyModifiedFiles()
-		if (recentlyModifiedFiles.length > 0) {
-			details +=
-				"\n\n# Recently Modified Files\nThese files have been modified since you last accessed them (file was just edited so you may need to re-read it before editing):"
-			for (const filePath of recentlyModifiedFiles) {
-				const parts = filePath.split(/[/\\]/)
-				const hasDotPart = parts.some((part) => part.startsWith("."))
-				const isLogOrTxt = filePath.toLowerCase().endsWith(".log") || filePath.toLowerCase().endsWith(".txt")
-				if (hasDotPart || isLogOrTxt) {
-					continue
-				}
-				details += `\n${filePath}`
-			}
-		}
-
+		
 		// Add current time information with timezone
 		const now = new Date()
 		const formatter = new Intl.DateTimeFormat(undefined, {

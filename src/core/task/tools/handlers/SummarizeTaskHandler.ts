@@ -4,7 +4,6 @@ import { getHooksEnabledSafe } from "@core/hooks/hooks-utils"
 import { executePreCompactHookWithCleanup, HookCancellationError } from "@core/hooks/precompact-executor"
 import { continuationPrompt } from "@core/prompts/contextManagement"
 import { formatResponse } from "@core/prompts/responses"
-import { ensureTaskDirectoryExists } from "@core/storage/disk"
 import { StateManager } from "@core/storage/StateManager"
 import { resolveWorkspacePath } from "@core/workspace"
 import { extractFileContent } from "@integrations/misc/extract-file-content"
@@ -232,11 +231,6 @@ export class SummarizeTaskHandler implements IToolHandler, IPartialBlockHandler 
 				keepStrategy,
 			)
 			await config.messageState.saveDiracMessagesAndUpdateHistory()
-			await config.services.contextManager.triggerApplyStandardContextTruncationNoticeChange(
-				Date.now(),
-				await ensureTaskDirectoryExists(config.taskId),
-				apiConversationHistory,
-			)
 
 			// Set summarizing state
 			config.taskState.currentlySummarizing = true

@@ -228,7 +228,7 @@ export function isNativeToolCallingConfig(providerInfo: ApiProviderInfo, enableN
 
 /**
  * Check if parallel tool calling is enabled.
- * For this fork of Dirac, we always enable parallel tool calling to support multiple tool uses per turn.
+ * For this fork, we always enable parallel tool calling to support multiple tool uses per turn.
  */
 export function isParallelToolCallingEnabled(enableParallelSetting: boolean, providerInfo: ApiProviderInfo): boolean {
 	return true

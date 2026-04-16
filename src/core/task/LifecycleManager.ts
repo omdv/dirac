@@ -222,7 +222,6 @@ export class LifecycleManager {
 		this.dependencies.messageStateHandler.setApiConversationHistory(savedApiConversationHistory as any)
 
 		const taskDir = await ensureTaskDirectoryExists(this.dependencies.taskId)
-		await this.dependencies.contextManager.initializeContextHistory(taskDir)
 
 		const lastDiracMessage = this.dependencies.messageStateHandler
 			.getDiracMessages()

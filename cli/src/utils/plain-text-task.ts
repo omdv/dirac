@@ -359,7 +359,7 @@ function handleMessageForPipeMode(
 				message.ask === "act_mode_respond")
 		) {
 			// In yolo mode, we auto-approve everything that requires it
-			if (verbose) {
+			if (verbose && statusPrefix === "[complete] ") {
 				process.stderr.write(`${statusPrefix}[yolo] Auto-approving ${message.ask}: ${fullText}\n`)
 			}
 		} else if (message.ask === "tool" || message.ask === "command" || message.ask === "browser_action_launch") {

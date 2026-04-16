@@ -1,7 +1,5 @@
-import { ContextManager } from "@core/context/context-management/ContextManager"
 import { FileContextTracker } from "@core/context/context-tracking/FileContextTracker"
 import { sendRelinquishControlEvent } from "@core/controller/ui/subscribeToRelinquishControl"
-import { ensureTaskDirectoryExists } from "@core/storage/disk"
 import { WorkspaceRootManager } from "@core/workspace/WorkspaceRootManager"
 import CheckpointTracker from "@integrations/checkpoints/CheckpointTracker"
 import { DiffViewProvider } from "@integrations/editor/DiffViewProvider"
@@ -669,9 +667,6 @@ export class TaskCheckpointManager implements ICheckpointManager {
 				const newConversationHistory = apiConversationHistory.slice(0, (message.conversationHistoryIndex || 0) + 2) // +1 since this index corresponds to the last user message, and another +1 since slice end index is exclusive
 				await this.services.messageStateHandler.overwriteApiConversationHistory(newConversationHistory)
 
-				// update the context history state
-				const contextManager = new ContextManager()
-				await contextManager.truncateContextHistory(message.ts, await ensureTaskDirectoryExists(this.task.taskId))
 
 				// aggregate deleted api reqs info so we don't lose costs/tokens
 				const diracMessages = this.services.messageStateHandler.getDiracMessages()

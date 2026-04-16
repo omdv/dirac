@@ -2,7 +2,6 @@ import { getHookModelContext } from "@core/hooks/hook-model-context"
 import { getHooksEnabledSafe } from "@core/hooks/hooks-utils"
 import { executePreCompactHookWithCleanup, HookCancellationError } from "@core/hooks/precompact-executor"
 import { summarizeTask } from "@core/prompts/contextManagement"
-import { ensureTaskDirectoryExists } from "@core/storage/disk"
 import { isMultiRootEnabled } from "@core/workspace/multi-root-utils"
 import { formatContentBlockToMarkdown } from "@integrations/misc/export-markdown"
 import { telemetryService } from "@services/telemetry"
@@ -77,11 +76,6 @@ export class ApiConversationManager {
 		this.dependencies.taskState.conversationHistoryDeletedRange = newDeletedRange
 
 		await this.dependencies.messageStateHandler.saveDiracMessagesAndUpdateHistory()
-		await this.dependencies.contextManager.triggerApplyStandardContextTruncationNoticeChange(
-			Date.now(),
-			await ensureTaskDirectoryExists(this.dependencies.taskId),
-			apiConversationHistory,
-		)
 
 		this.dependencies.taskState.didAutomaticallyRetryFailedApiRequest = true
 	}
@@ -128,17 +122,6 @@ export class ApiConversationManager {
 					if (activeMessageCount <= 2) {
 						shouldCompact = false
 					}
-				}
-
-				// Determine whether we can save enough tokens from context rewriting to skip auto-compact
-				if (shouldCompact) {
-					shouldCompact = await this.dependencies.contextManager.attemptFileReadOptimization(
-						this.dependencies.messageStateHandler.getApiConversationHistory(),
-						this.dependencies.taskState.conversationHistoryDeletedRange,
-						this.dependencies.messageStateHandler.getDiracMessages(),
-						previousApiReqIndex,
-						await ensureTaskDirectoryExists(this.dependencies.taskId),
-					)
 				}
 			}
 		}

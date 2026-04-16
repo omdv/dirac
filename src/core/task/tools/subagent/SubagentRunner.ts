@@ -740,16 +740,8 @@ export class SubagentRunner {
 		didCompact: boolean
 		conversationHistoryDeletedRange: [number, number] | undefined
 	} {
-		const optimizationResult = this.optimizeConversationForContextWindow(contextManager, conversation)
-		let didCompact = optimizationResult.didOptimize
+		let didCompact = false
 		let updatedDeletedRange = conversationHistoryDeletedRange
-
-		if (optimizationResult.didOptimize && !optimizationResult.needToTruncate) {
-			return {
-				didCompact: true,
-				conversationHistoryDeletedRange: updatedDeletedRange,
-			}
-		}
 
 		const deletedRange = contextManager.getNextTruncationRange(conversation, conversationHistoryDeletedRange, "quarter")
 		if (deletedRange[1] < deletedRange[0]) {
@@ -778,25 +770,6 @@ export class SubagentRunner {
 		}
 	}
 
-	private optimizeConversationForContextWindow(
-		contextManager: ContextManager,
-		conversation: DiracStorageMessage[],
-	): {
-		didOptimize: boolean
-		needToTruncate: boolean
-	} {
-		const timestamp = Date.now()
-		const optimizationResult = contextManager.attemptFileReadOptimizationInMemory(conversation, undefined, timestamp)
-		if (!optimizationResult.anyContextUpdates) {
-			return { didOptimize: false, needToTruncate: true }
-		}
-
-		const optimizedConversation = optimizationResult.optimizedConversationHistory.map(
-			(message) => message as DiracStorageMessage,
-		)
-		conversation.splice(0, conversation.length, ...optimizedConversation)
-		return { didOptimize: true, needToTruncate: optimizationResult.needToTruncate }
-	}
 
 	private shouldCompactBeforeNextRequest(
 		requestTotalTokens: number,

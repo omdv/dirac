@@ -258,8 +258,8 @@ function formatSayMessage(message: DiracMessage, prefix: string, verbose: boolea
 						const costStr = info.cost !== undefined ? `Cost: $${info.cost.toFixed(4)}` : ""
 						const tokensStr = info.tokensIn !== undefined ? `Tokens: ${info.tokensIn.toLocaleString()} in, ${info.tokensOut.toLocaleString()} out` : ""
 						const cacheStr =
-							info.cacheReadTokens !== undefined || info.cacheWriteTokens !== undefined
-								? ` (Cache: ${(info.cacheReadTokens || 0).toLocaleString()} read, ${(info.cacheWriteTokens || 0).toLocaleString()} write)`
+							info.cacheReads !== undefined || info.cacheWrites !== undefined
+								? ` (Cache: ${(info.cacheReads || 0).toLocaleString()} read, ${(info.cacheWrites || 0).toLocaleString()} write)`
 								: ""
 						const contextStr =
 							info.contextWindow !== undefined

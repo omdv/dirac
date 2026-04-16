@@ -2,7 +2,6 @@ import type { ToolUse } from "@core/assistant-message"
 import { telemetryService } from "@/services/telemetry"
 
 import { formatResponse } from "@core/prompts/responses"
-import { ensureTaskDirectoryExists } from "@core/storage/disk"
 import { processFilesIntoText } from "@integrations/misc/extract-text"
 import { showSystemNotification } from "@integrations/notifications"
 import { DiracAsk } from "@shared/ExtensionMessage"
@@ -87,11 +86,6 @@ export class CondenseHandler implements IToolHandler, IPartialBlockHandler {
 			keepStrategy,
 		)
 		await config.messageState.saveDiracMessagesAndUpdateHistory()
-		await config.services.contextManager.triggerApplyStandardContextTruncationNoticeChange(
-			Date.now(),
-			await ensureTaskDirectoryExists(config.taskId),
-			apiConversationHistory,
-		)
 
 		const apiConfig = config.services.stateManager.getApiConfiguration()
 		const provider = (config.mode === "plan" ? apiConfig.planModeApiProvider : apiConfig.actModeApiProvider) as string

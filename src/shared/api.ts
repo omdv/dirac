@@ -2917,6 +2917,16 @@ export const sapAiCoreModels = {
 // Moonshot AI Studio
 // https://platform.moonshot.ai/docs/pricing/chat
 export const moonshotModels = {
+	"kimi-k2.6": {
+		maxTokens: 32_000,
+		contextWindow: 262_144,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.95,
+		outputPrice: 4.0,
+		cacheReadsPrice: 0.16,
+		temperature: 1.0,
+	},
 	"kimi-k2.5": {
 		maxTokens: 32_000,
 		contextWindow: 262_144,
@@ -2947,7 +2957,7 @@ export const moonshotModels = {
 	},
 } as const satisfies Record<string, OpenAiCompatibleModelInfo>
 export type MoonshotModelId = keyof typeof moonshotModels
-export const moonshotDefaultModelId = "kimi-k2-0905-preview" satisfies MoonshotModelId
+export const moonshotDefaultModelId = "kimi-k2.6" satisfies MoonshotModelId
 
 // Huawei Cloud MaaS
 // Dify.ai - No model selection needed, models are configured in Dify workflows
@@ -3286,8 +3296,19 @@ export const mainlandZAiModels = {
 
 // Fireworks AI
 export type FireworksModelId = keyof typeof fireworksModels
-export const fireworksDefaultModelId: FireworksModelId = "accounts/fireworks/models/kimi-k2p5"
+export const fireworksDefaultModelId: FireworksModelId = "accounts/fireworks/models/kimi-k2p6"
 export const fireworksModels = {
+	"accounts/fireworks/models/kimi-k2p6": {
+		maxTokens: 16384,
+		contextWindow: 262144,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.95,
+		outputPrice: 4,
+		cacheReadsPrice: 0.16,
+		description:
+			"Moonshot's flagship open agentic model. Kimi K2.5 unifies vision and text, thinking and non-thinking modes, and single-agent and multi-agent execution.",
+	},
 	"accounts/fireworks/models/kimi-k2p5": {
 		maxTokens: 16384,
 		contextWindow: 262144,

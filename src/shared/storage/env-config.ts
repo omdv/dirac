@@ -18,11 +18,12 @@ export const ENV_VAR_TO_SECRET_KEY: Record<string, keyof Secrets> = {
 	AI_GATEWAY_API_KEY: "vercelAiGatewayApiKey",
 	ZAI_API_KEY: "zaiApiKey",
 	MISTRAL_API_KEY: "mistralApiKey",
+	MOONSHOT_API_KEY: "moonshotApiKey",
 	MINIMAX_API_KEY: "minimaxApiKey",
 	MINIMAX_CN_API_KEY: "minimaxApiKey",
 	HF_TOKEN: "huggingFaceApiKey",
 	OPENCODE_API_KEY: "openAiNativeApiKey",
-	KIMI_API_KEY: "openAiNativeApiKey",
+	KIMI_API_KEY: "openAiNativeApiKey"
 }
 
 /**
@@ -59,6 +60,7 @@ export function getProviderFromEnv(): ApiProvider | undefined {
 	if (process.env.GROQ_API_KEY) return "groq"
 	if (process.env.XAI_API_KEY) return "xai"
 	if (process.env.MISTRAL_API_KEY) return "mistral"
+	if (process.env.MOONSHOT_API_KEY) return "moonshot"
 	if (process.env.HF_TOKEN) return "huggingface"
 	if (process.env.ZAI_API_KEY) return "zai"
 	if (process.env.MINIMAX_API_KEY || process.env.MINIMAX_CN_API_KEY) return "minimax"

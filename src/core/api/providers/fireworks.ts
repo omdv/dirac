@@ -5,6 +5,7 @@ import { createOpenAIClient } from "@/shared/net"
 import { ApiHandler, CommonApiHandlerOptions } from ".."
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
+import { addReasoningContent } from "../transform/r1-format"
 import { ApiStream } from "../transform/stream"
 
 interface FireworksHandlerOptions extends CommonApiHandlerOptions {
@@ -44,9 +45,11 @@ export class FireworksHandler implements ApiHandler {
 		const client = this.ensureClient()
 		const modelId = this.options.fireworksModelId ?? ""
 
+		const model = this.getModel()
+		const convertedMessages = convertToOpenAiMessages(messages)
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages),
+			...((model.info as any).isR1FormatRequired ? addReasoningContent(convertedMessages, messages) : convertedMessages),
 		]
 
 		const stream = await client.chat.completions.create({

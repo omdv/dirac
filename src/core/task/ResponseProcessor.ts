@@ -31,7 +31,10 @@ export class ResponseProcessor {
 		modelInfo: any
 		toolUseHandler: any
 	}): Promise<boolean> {
-		const assistantHasContent = params.assistantMessage.length > 0 || this.dependencies.taskState.useNativeToolCalls
+		const { reasonsHandler } = this.dependencies.streamHandler.getHandlers()
+		const thinkingBlock = reasonsHandler.getCurrentReasoning()
+		const assistantHasContent =
+			params.assistantMessage.length > 0 || this.dependencies.taskState.useNativeToolCalls || !!thinkingBlock?.thinking
 
 		if (assistantHasContent) {
 			telemetryService.captureConversationTurnEvent(
@@ -40,15 +43,16 @@ export class ResponseProcessor {
 				params.modelId,
 				"assistant",
 				params.mode as any,
+				params.taskMetrics,
+				this.dependencies.taskState.useNativeToolCalls,
 			)
 
-			const { reasonsHandler } = this.dependencies.streamHandler.getHandlers()
+
 			const redactedThinkingContent = reasonsHandler.getRedactedThinking()
 			const requestId = this.dependencies.streamHandler.requestId
 
 			const assistantContent: Array<DiracAssistantContent> = [...redactedThinkingContent]
 
-			const thinkingBlock = reasonsHandler.getCurrentReasoning()
 			if (thinkingBlock) {
 				assistantContent.push({ ...thinkingBlock })
 			}

@@ -9,6 +9,7 @@ import { createOpenAIClient, fetch } from "@/shared/net"
 import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
+import { addReasoningContent } from "../transform/r1-format"
 import { convertToR1Format } from "../transform/r1-format"
 import { ApiStream } from "../transform/stream"
 import { getOpenAIToolParams, ToolCallProcessor } from "../transform/tool-call-processor"
@@ -130,7 +131,18 @@ export class OpenAiHandler implements ApiHandler {
 		}
 
 		if (isDeepseekReasoner || isR1FormatRequired) {
-			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			const modelInfo = this.getModel().info
+			if ((modelInfo as any).supportsTools || (modelInfo as any).isR1FormatRequired) {
+				// If the model supports tools or specifically requires R1 format (which includes reasoning_content),
+				// we use convertToOpenAiMessages + addReasoningContent to preserve tool calls.
+				// convertToR1Format merges messages but loses tools.
+				openAiMessages = [
+					{ role: "system", content: systemPrompt },
+					...addReasoningContent(convertToOpenAiMessages(messages), messages),
+				]
+			} else {
+				openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			}
 		}
 
 		if (isReasoningModelFamily) {

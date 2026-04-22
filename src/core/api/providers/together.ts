@@ -7,6 +7,7 @@ import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
+import { addReasoningContent } from "../transform/r1-format"
 import { ApiStream } from "../transform/stream"
 import { getOpenAIToolParams, ToolCallProcessor } from "../transform/tool-call-processor"
 
@@ -45,14 +46,22 @@ export class TogetherHandler implements ApiHandler {
 		const client = this.ensureClient()
 		const modelId = this.options.togetherModelId ?? ""
 		const isDeepseekReasoner = modelId.includes("deepseek-reasoner")
+		const model = this.getModel()
 
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
 			...convertToOpenAiMessages(messages),
 		]
 
-		if (isDeepseekReasoner) {
-			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+		if (isDeepseekReasoner || (model.info as any).isR1FormatRequired) {
+			if ((model.info as any).supportsTools) {
+				openAiMessages = [
+					{ role: "system", content: systemPrompt },
+					...addReasoningContent(convertToOpenAiMessages(messages), messages),
+				]
+			} else {
+				openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			}
 		}
 
 		const stream = await client.chat.completions.create({

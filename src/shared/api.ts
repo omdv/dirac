@@ -2672,6 +2672,8 @@ export const groqModels = {
 	},
 	// Moonshot Models
 	"moonshotai/kimi-k2-instruct": {
+		isR1FormatRequired: true,
+		supportsTools: true,
 		maxTokens: 16384,
 		contextWindow: 131072,
 		supportsImages: false,
@@ -2683,6 +2685,8 @@ export const groqModels = {
 			"Kimi K2 is Moonshot AI's state-of-the-art Mixture-of-Experts (MoE) language model with 1 trillion total parameters and 32 billion activated parameters.",
 	},
 	"moonshotai/kimi-k2-instruct-0905": {
+		isR1FormatRequired: true,
+		supportsTools: true,
 		maxTokens: 16384,
 		contextWindow: 262144,
 		supportsImages: false,
@@ -2693,7 +2697,7 @@ export const groqModels = {
 		description:
 			"Kimi K2 model gets a new version update: Agentic coding: more accurate, better generalization across scaffolds. Frontend coding: improved aesthetics and functionalities on web, 3d, and other tasks. Context length: extended from 128k to 256k, providing better long-horizon support.",
 	},
-} as const satisfies Record<string, ModelInfo>
+} as const satisfies Record<string, OpenAiCompatibleModelInfo>
 
 // Requesty
 // https://requesty.ai/models
@@ -2926,6 +2930,8 @@ export const moonshotModels = {
 		outputPrice: 4.0,
 		cacheReadsPrice: 0.16,
 		temperature: 1.0,
+		isR1FormatRequired: true,
+		supportsTools: true,
 	},
 	"kimi-k2.5": {
 		maxTokens: 32_000,
@@ -2936,6 +2942,8 @@ export const moonshotModels = {
 		outputPrice: 3.0,
 		cacheReadsPrice: 0.1,
 		temperature: 1.0,
+		isR1FormatRequired: true,
+		supportsTools: true,
 	},
 	"kimi-k2-0905-preview": {
 		maxTokens: 16384,
@@ -2945,6 +2953,8 @@ export const moonshotModels = {
 		inputPrice: 0.6,
 		outputPrice: 2.5,
 		temperature: 0.6,
+		isR1FormatRequired: true,
+		supportsTools: true,
 	},
 	"kimi-k2-thinking-turbo": {
 		maxTokens: 32_000,
@@ -2954,6 +2964,8 @@ export const moonshotModels = {
 		inputPrice: 2.4,
 		outputPrice: 10,
 		temperature: 1.0,
+		isR1FormatRequired: true,
+		supportsTools: true,
 	},
 } as const satisfies Record<string, OpenAiCompatibleModelInfo>
 export type MoonshotModelId = keyof typeof moonshotModels
@@ -3292,13 +3304,15 @@ export const mainlandZAiModels = {
 		inputPrice: 0.6,
 		outputPrice: 2.2,
 	},
-} as const satisfies Record<string, ModelInfo>
+} as const satisfies Record<string, OpenAiCompatibleModelInfo>
 
 // Fireworks AI
 export type FireworksModelId = keyof typeof fireworksModels
 export const fireworksDefaultModelId: FireworksModelId = "accounts/fireworks/models/kimi-k2p6"
 export const fireworksModels = {
 	"accounts/fireworks/models/kimi-k2p6": {
+		isR1FormatRequired: true,
+		supportsTools: true,
 		maxTokens: 16384,
 		contextWindow: 262144,
 		supportsImages: true,
@@ -3310,6 +3324,8 @@ export const fireworksModels = {
 			"Moonshot's flagship open agentic model. Kimi K2.5 unifies vision and text, thinking and non-thinking modes, and single-agent and multi-agent execution.",
 	},
 	"accounts/fireworks/models/kimi-k2p5": {
+		isR1FormatRequired: true,
+		supportsTools: true,
 		maxTokens: 16384,
 		contextWindow: 262144,
 		supportsImages: true,
@@ -3409,7 +3425,7 @@ export const fireworksModels = {
 		cacheReadsPrice: 0.01,
 		description: "OpenAI gpt-oss-120b open-weight model for production and high-reasoning use cases.",
 	},
-} as const satisfies Record<string, ModelInfo>
+} as const satisfies Record<string, OpenAiCompatibleModelInfo>
 
 // Qwen Code
 // https://chat.qwen.ai/

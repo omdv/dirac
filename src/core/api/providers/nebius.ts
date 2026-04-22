@@ -7,6 +7,7 @@ import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
+import { addReasoningContent } from "../transform/r1-format"
 import { ApiStream } from "../transform/stream"
 import { getOpenAIToolParams, ToolCallProcessor } from "../transform/tool-call-processor"
 
@@ -42,9 +43,10 @@ export class NebiusHandler implements ApiHandler {
 		const client = this.ensureClient()
 		const model = this.getModel()
 
-		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = model.id.includes("DeepSeek-R1")
-			? convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
-			: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)]
+		const convertedMessages = convertToOpenAiMessages(messages)
+		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = (model.id.includes("DeepSeek-R1") || (model.info as any).isR1FormatRequired)
+			? ((model.info as any).supportsTools ? [{ role: "system", content: systemPrompt }, ...addReasoningContent(convertedMessages, messages)] : convertToR1Format([{ role: "user", content: systemPrompt }, ...messages]))
+			: [{ role: "system", content: systemPrompt }, ...convertedMessages]
 
 		const stream = await client.chat.completions.create({
 			model: model.id,

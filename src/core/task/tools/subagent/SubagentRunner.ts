@@ -530,7 +530,7 @@ ${partialResult}`
 				}
 
 				const streamHandler = new StreamResponseHandler()
-				const { toolUseHandler } = streamHandler.getHandlers()
+				const { toolUseHandler, reasonsHandler } = streamHandler.getHandlers()
 				usageState.currentRequest = createEmptyRequestUsageState()
 				const requestUsage = usageState.currentRequest
 
@@ -660,6 +660,10 @@ ${partialResult}`
 					finalizedToolCalls = fallbackNonNativeToolCalls
 				}
 				const assistantContent = [] as any[]
+				const thinkingBlock = reasonsHandler.getCurrentReasoning()
+				if (thinkingBlock) {
+					assistantContent.push({ ...thinkingBlock })
+				}
 				if (assistantText.trim().length > 0) {
 					assistantContent.push({
 						type: "text",

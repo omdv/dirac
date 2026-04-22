@@ -7,6 +7,7 @@ import { ApiHandler, CommonApiHandlerOptions } from "../index"
 import { withRetry } from "../retry"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { convertToR1Format } from "../transform/r1-format"
+import { addReasoningContent } from "../transform/r1-format"
 import { ApiStream } from "../transform/stream"
 import { getOpenAIToolParams, ToolCallProcessor } from "../transform/tool-call-processor"
 
@@ -53,7 +54,14 @@ export class SambanovaHandler implements ApiHandler {
 		const modelId = model.id.toLowerCase()
 
 		if (modelId.includes("deepseek") || modelId.includes("qwen3")) {
-			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			if ((model.info as any).supportsTools) {
+				openAiMessages = [
+					{ role: "system", content: systemPrompt },
+					...addReasoningContent(convertToOpenAiMessages(messages), messages),
+				]
+			} else {
+				openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			}
 		}
 
 		const toolCallProcessor = new ToolCallProcessor()

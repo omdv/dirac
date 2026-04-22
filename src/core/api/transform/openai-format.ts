@@ -245,7 +245,7 @@ export function convertToOpenAiMessages(
 
 				const hasToolCalls = tool_calls.length > 0
 				const hasMeaningfulContent = content !== undefined && content.trim() !== ""
-				const finalContent = hasMeaningfulContent ? content : hasToolCalls ? null : undefined
+				const finalContent = hasMeaningfulContent ? content : hasToolCalls ? null : ""
 
 				const consolidatedReasoningDetails =
 					reasoningDetails.length > 0 ? consolidateReasoningDetails(reasoningDetails as any) : []

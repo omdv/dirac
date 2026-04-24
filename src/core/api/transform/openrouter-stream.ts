@@ -17,7 +17,7 @@ import {
 import OpenAI from "openai"
 import { ChatCompletionTool } from "openai/resources/chat/completions"
 import { convertToOpenAiMessages, sanitizeGeminiMessages } from "./openai-format"
-import { convertToR1Format } from "./r1-format"
+import { addReasoningContent, convertToR1Format } from "./r1-format"
 import { getOpenAIToolParams } from "./tool-call-processor"
 
 export async function createOpenRouterStream(
@@ -49,6 +49,13 @@ export async function createOpenRouterStream(
 
 	// Sanitize messages for Gemini models (removes tool_calls without reasoning_details)
 	openAiMessages = sanitizeGeminiMessages(openAiMessages, model.id)
+
+	const isDeepSeek = model.id.startsWith("deepseek/")
+	const supportsReasoning = model.info.supportsReasoning
+	const requestedEffort = normalizeOpenaiReasoningEffort(reasoningEffort)
+	const isThinkingEnabled = supportsReasoning && requestedEffort !== "none"
+	const isR1 = model.id.includes("r1") || model.id.includes("reasoner")
+	const shouldAddReasoningContent = isDeepSeek && (isR1 || supportsReasoning)
 
 	// prompt caching: https://openrouter.ai/docs/prompt-caching
 	// this was initially specifically for claude models (some models may 'support prompt caching' automatically without this)
@@ -135,6 +142,10 @@ export async function createOpenRouterStream(
 		openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
 	}
 
+	if (shouldAddReasoningContent) {
+		openAiMessages = addReasoningContent(openAiMessages, messages as any)
+	}
+
 	const supportsReasoningEffort = supportsReasoningEffortForModel(model.id)
 
 	let reasoning: { max_tokens: number } | undefined
@@ -183,16 +194,29 @@ export async function createOpenRouterStream(
 		reasoning ?? (reasoningEffortValue && reasoningEffortValue !== "none" ? { effort: reasoningEffortValue } : undefined)
 	const maxTokens = Math.min(model.info.maxTokens || GEMINI_MAX_OUTPUT_TOKENS, GEMINI_MAX_OUTPUT_TOKENS)
 
+	if (isDeepSeek && supportsReasoning && !isR1) {
+		if (isThinkingEnabled) {
+			temperature = undefined
+			topP = undefined
+		}
+	}
+
 	const requestPayload: Record<string, unknown> = {
 		model: model.id,
 		...(maxTokens ? { max_tokens: maxTokens } : {}),
-		temperature: temperature,
-		top_p: topP,
+		...(temperature !== undefined ? { temperature } : {}),
+		...(topP !== undefined ? { top_p: topP } : {}),
 		messages: openAiMessages,
 		stream: true,
 		stream_options: { include_usage: true },
 		include_reasoning: includeReasoning,
 		...(reasoningPayload ? { reasoning: reasoningPayload } : {}),
+		...(isDeepSeek && supportsReasoning && !isR1
+			? {
+				thinking: { type: isThinkingEnabled ? "enabled" : "disabled" },
+				...(isThinkingEnabled ? { reasoning_effort: requestedEffort } : {}),
+			}
+			: {}),
 		...(openRouterProviderSorting && !providerPreferences ? { provider: { sort: openRouterProviderSorting } } : {}),
 		...(providerPreferences ? { provider: providerPreferences } : {}),
 		...(isClaude1m ? { provider: { order: ["anthropic", "google-vertex/global"], allow_fallbacks: false } } : {}),

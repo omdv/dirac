@@ -115,7 +115,6 @@ export const SymbolOutput = ({ tool, unit, isExpanded, onToggleExpand, message }
 				</div>
 			)
 
-		case "replaceSymbol":
 		case "renameSymbol":
 		case "rename_symbol": {
 			const diff = unit.content || tool.diff
@@ -153,10 +152,26 @@ export const SymbolOutput = ({ tool, unit, isExpanded, onToggleExpand, message }
 		}
 
 
+		case "replaceSymbol":
 		case "replace_symbol": {
 			const diff = unit.content || tool.diff
+			const symbol = unit.symbol || (tool.replacements && tool.replacements[0]?.symbol) || tool.symbol
 			return (
 				<div className="flex flex-col gap-2">
+					{symbol && (
+						<div className="bg-code border border-editor-group-border overflow-hidden rounded-xs mb-1 py-[9px] px-2.5">
+							<div className="flex flex-col gap-1.5">
+								<div className="flex items-center gap-2">
+									<span className="text-[10px] font-medium uppercase tracking-wider opacity-50">Replace</span>
+									<div className="flex items-center gap-1.5 font-mono text-xs">
+										<span className="px-1.5 py-0.5 bg-description/10 text-description rounded-[3px] border border-description/20">
+											{symbol}
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
 					{unit.content && !diff?.startsWith(" ") && !diff?.startsWith("-") && !diff?.startsWith("+") && (
 						<div className="flex flex-col gap-1">
 							<span className="text-[10px] font-medium uppercase tracking-wider opacity-50 ml-1">New Content</span>

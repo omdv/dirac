@@ -39,7 +39,7 @@ export class FileEditProvider extends DiffViewProvider {
 		_currentLine: number | undefined,
 	): Promise<void> {
 		if (this.documentContent === undefined) {
-			throw new Error("Document not initialized")
+			throw new Error(`Document not initialized for ${this.relPath || "unknown file"}. This can happen if the file failed to open or was already reset.`)
 		}
 
 		// Split the document into lines

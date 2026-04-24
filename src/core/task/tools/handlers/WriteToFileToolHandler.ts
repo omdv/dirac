@@ -85,7 +85,6 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 		} catch (error) {
 			// Reset diff view on error
 			await config.services.diffViewProvider.revertChanges()
-			await config.services.diffViewProvider.reset()
 			throw error
 		}
 	}
@@ -318,7 +317,6 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 				const { PreToolUseHookCancellationError } = await import("@core/hooks/PreToolUseHookCancellationError")
 				if (error instanceof PreToolUseHookCancellationError) {
 					await config.services.diffViewProvider.revertChanges()
-					await config.services.diffViewProvider.reset()
 					return formatResponse.toolDenied()
 				}
 				throw error
@@ -373,7 +371,6 @@ export class WriteToFileToolHandler implements IFullyManagedTool {
 		} catch (error) {
 			// Reset diff view on error
 			await config.services.diffViewProvider.revertChanges()
-			await config.services.diffViewProvider.reset()
 			throw error
 		}
 	}

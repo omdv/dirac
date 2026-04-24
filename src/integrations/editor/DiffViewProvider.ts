@@ -422,43 +422,52 @@ export abstract class DiffViewProvider {
 		if (!this.absolutePath || !this.isEditing) {
 			return
 		}
+
 		const fileExists = this.editType === "modify"
 
-		if (!fileExists) {
-			// This is a load-bearing save statement- even though the file is saved and then immediately deleted.
-			// In vscode, it will not close the diff editor correctly if the file is not saved.
-			await this.saveDocument()
-			await this.closeAllDiffViews()
-			await fs.rm(this.absolutePath, { force: true })
-			Logger.log(`File ${this.absolutePath} has been deleted.`)
+		try {
+			if (!fileExists) {
+				// This is a load-bearing save statement- even though the file is saved and then immediately deleted.
+				// In vscode, it will not close the diff editor correctly if the file is not saved.
+				await this.saveDocument()
+				await this.closeAllDiffViews()
+				await fs.rm(this.absolutePath, { force: true })
+				Logger.log(`File ${this.absolutePath} has been deleted.`)
 
-			// Remove only the directories we created, in reverse order
-			for (let i = this.createdDirs.length - 1; i >= 0; i--) {
-				try {
-					await fs.rmdir(this.createdDirs[i])
-					Logger.log(`Directory ${this.createdDirs[i]} has been deleted.`)
-				} catch (error) {
-					Logger.log(`Could not delete directory ${this.createdDirs[i]}`, error)
+				// Remove only the directories we created, in reverse order
+				for (let i = this.createdDirs.length - 1; i >= 0; i--) {
+					try {
+						await fs.rmdir(this.createdDirs[i])
+						Logger.log(`Directory ${this.createdDirs[i]} has been deleted.`)
+					} catch (error) {
+						Logger.log(`Could not delete directory ${this.createdDirs[i]}`, error)
+					}
 				}
-			}
-		} else {
-			// revert document
-			// Apply the edit and save, since contents shouldn't have changed this won't show in local history unless of
-			// course the user made changes and saved during the edit.
-			const contents = (await this.getDocumentText()) || ""
-			const lineCount = (contents.match(/\n/g) || []).length + 1
-			await this.replaceText(this.originalContent ?? "", { startLine: 0, endLine: lineCount }, undefined)
+			} else {
+				// revert document
+				// Apply the edit and save, since contents shouldn't have changed this won't show in local history unless of
+				// course the user made changes and saved during the edit.
+				const currentContents = await this.getDocumentText()
+				if (currentContents !== undefined && this.originalContent !== undefined) {
+					const lineCount = (currentContents.match(/\n/g) || []).length + 1
+					await this.replaceText(this.originalContent, { startLine: 0, endLine: lineCount }, undefined)
+					await this.saveDocument()
+					Logger.log(`File ${this.absolutePath} has been reverted to its original content.`)
+				} else {
+					Logger.log(`Skipping content revert for ${this.absolutePath} as it was not successfully initialized.`)
+				}
 
-			await this.saveDocument()
-			Logger.log(`File ${this.absolutePath} has been reverted to its original content.`)
-			if (this.documentWasOpen) {
-				openFile(this.absolutePath, true)
+				if (this.documentWasOpen) {
+					openFile(this.absolutePath, true)
+				}
+				await this.closeAllDiffViews()
 			}
-			await this.closeAllDiffViews()
+		} catch (error) {
+			Logger.error(`Failed to revert changes for ${this.absolutePath}:`, error)
+		} finally {
+			// edit is done
+			await this.reset()
 		}
-
-		// edit is done
-		await this.reset()
 	}
 
 	async scrollToFirstDiff() {

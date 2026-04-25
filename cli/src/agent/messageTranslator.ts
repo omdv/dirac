@@ -35,6 +35,7 @@ const TOOL_KIND_MAP: Record<string, acp.ToolKind> = {
 	// Other
 	summarizeTask: "think",
 	useSkill: "other",
+	listSkills: "read",
 	useSubagents: "other",
 	getFunction: "read",
 	getFileSkeleton: "read",
@@ -826,6 +827,8 @@ function buildToolTitle(toolInfo: DiracSayTool): string {
 			return "Summarize"
 		case "useSkill":
 			return "Use skill"
+		case "listSkills":
+			return "List skills"
 		case "use_subagents" as any:
 			return "Subagents"
 		case "getFunction":

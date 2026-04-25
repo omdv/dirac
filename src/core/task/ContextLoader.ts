@@ -1,5 +1,8 @@
-import { extractSymbolLikeStrings } from "@core/context/instructions/user-instructions/rule-conditionals"
 import { formatResponse } from "@core/prompts/responses"
+
+import { extractSymbolLikeStrings } from "@core/context/instructions/user-instructions/rule-conditionals"
+import { getOrDiscoverSkills } from "../context/instructions/user-instructions/skills"
+import { SkillMetadata } from "@/shared/skills"
 import { listFiles } from "@services/glob/list-files"
 
 import { parseMentions } from "@core/mentions"
@@ -333,6 +336,7 @@ export class ContextLoader {
         ulid: string,
         providerInfo: any,
         includePathContext: boolean,
+        availableSkills: SkillMetadata[]
     ): Promise<{ enrichedText: string; needsDiracrulesFileCheck: boolean }> {
         const parsedText = await parseMentions(
             text,
@@ -348,6 +352,7 @@ export class ContextLoader {
             globalWorkflowToggles,
             ulid,
             providerInfo,
+            availableSkills
         )
 
         // Skip automatic path and symbol detection for subsequent turns
@@ -377,7 +382,7 @@ export class ContextLoader {
         userContent: DiracContent[],
         includeFileDetails = false,
         useCompactPrompt = false,
-    ): Promise<[DiracContent[], string, boolean]> {
+    ): Promise<[DiracContent[], string, boolean, SkillMetadata[]]> {
         let needsDiracrulesFileCheck = false
 
         // Pre-fetch necessary data to avoid redundant calls within loops
@@ -385,6 +390,16 @@ export class ContextLoader {
         const providerInfo = this.dependencies.getCurrentProviderInfo()
         const cwd = this.dependencies.cwd
         const { localWorkflowToggles, globalWorkflowToggles } = await refreshWorkflowToggles(this.dependencies.controller, cwd)
+
+        // Discover and filter skills
+        const resolvedSkills = await getOrDiscoverSkills(cwd, this.dependencies.taskState)
+        const globalSkillsToggles = this.dependencies.stateManager.getGlobalSettingsKey("globalSkillsToggles") ?? {}
+        const localSkillsToggles = this.dependencies.stateManager.getWorkspaceStateKey("localSkillsToggles") ?? {}
+        const availableSkills = resolvedSkills.filter((skill) => {
+            const toggles = skill.source === "global" ? globalSkillsToggles : localSkillsToggles
+            return toggles[skill.path] !== false
+        })
+        this.dependencies.taskState.availableSkills = availableSkills
 
         const hasUserContentTag = (text: string): boolean => {
             return USER_CONTENT_TAGS.some((tag: string) => text.includes(tag))
@@ -399,7 +414,7 @@ export class ContextLoader {
                 ulid,
                 providerInfo,
                 includeFileDetails,
-
+                availableSkills
             )
 
             if (needsCheck) {
@@ -478,8 +493,7 @@ export class ContextLoader {
             ? await ensureLocalDiracDirExists(this.dependencies.cwd, GlobalFileNames.diracRules)
             : false
 
-
-        return [processedUserContent, environmentDetails, diracrulesError]
+        return [processedUserContent, environmentDetails, diracrulesError, availableSkills]
     }
 
     private get urlContentFetcher() {

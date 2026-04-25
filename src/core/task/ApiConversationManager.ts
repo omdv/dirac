@@ -157,7 +157,7 @@ export class ApiConversationManager {
 				params.userContent,
 				params.includeFileDetails,
 				params.useCompactPrompt,
-			)
+			) as any // Ignore 4th return value here as it's already in taskState
 		}
 
 		// error handling if the user uses the /newrule command & their .diracrules is a file, for file read operations didnt work properly

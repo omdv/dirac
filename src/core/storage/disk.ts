@@ -58,6 +58,7 @@ export const GlobalFileNames = {
 	diracSkillsDir: ".dirac/skills",
 	claudeSkillsDir: ".claude/skills",
 	agentsSkillsDir: ".agents/skills",
+	aiSkillsDir: ".ai/skills",
 	cursorRulesDir: ".cursor/rules",
 	cursorRulesFile: ".cursorrules",
 	windsurfRules: ".windsurfrules",
@@ -164,6 +165,21 @@ function getAgentSkillsDirectoryPath(): string {
 }
 
 /**
+ * Returns the global Claude skills directory path (~/.claude/skills).
+ */
+function getClaudeSkillsDirectoryPath(): string {
+	return path.join(os.homedir(), ".claude", "skills")
+}
+
+/**
+ * Returns the global AI skills directory path (~/.ai/skills).
+ */
+function getAiSkillsDirectoryPath(): string {
+	return path.join(os.homedir(), ".ai", "skills")
+}
+
+
+/**
  * Returns the global agent skills directory path (~/.agents/skills).
  * Creates the directory if it doesn't exist.
  * This is the opinionated location for new global skills.
@@ -195,9 +211,12 @@ export function getSkillsDirectoriesForScan(cwd: string): SkillsScanDirectory[] 
 		{ path: path.join(cwd, GlobalFileNames.diracruleSkillsDir), source: "project" },
 		{ path: path.join(cwd, GlobalFileNames.diracSkillsDir), source: "project" },
 		{ path: path.join(cwd, GlobalFileNames.claudeSkillsDir), source: "project" },
+		{ path: path.join(cwd, GlobalFileNames.aiSkillsDir), source: "project" },
 		{ path: path.join(cwd, GlobalFileNames.agentsSkillsDir), source: "project" },
 		{ path: getDiracSkillsDirectoryPath(), source: "global" },
 		{ path: getAgentSkillsDirectoryPath(), source: "global" },
+		{ path: getClaudeSkillsDirectoryPath(), source: "global" },
+		{ path: getAiSkillsDirectoryPath(), source: "global" },
 	]
 }
 

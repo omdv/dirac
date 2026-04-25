@@ -2,6 +2,7 @@ import { DEFAULT_AUTO_APPROVAL_SETTINGS } from "@shared/AutoApprovalSettings"
 import { DEFAULT_BROWSER_SETTINGS } from "@shared/BrowserSettings"
 import { Environment } from "@shared/config-types"
 import type { DiracMessage, ExtensionState } from "@shared/ExtensionMessage"
+import { SkillMetadata } from "@shared/skills"
 import { DEFAULT_PLATFORM } from "@shared/ExtensionMessage"
 import {
 	basetenDefaultModelId,
@@ -90,6 +91,7 @@ interface SettingsState {
 	localAgentsRulesToggles: Record<string, boolean>
 	localWorkflowToggles: Record<string, boolean>
 	globalWorkflowToggles: Record<string, boolean>
+	availableSkills: SkillMetadata[]
 	globalSkillsToggles: Record<string, boolean>
 	localSkillsToggles: Record<string, boolean>
 	remoteRulesToggles: Record<string, boolean>
@@ -192,6 +194,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 	localAgentsRulesToggles: {},
 	localWorkflowToggles: {},
 	globalWorkflowToggles: {},
+	availableSkills: [],
 	globalSkillsToggles: {},
 	localSkillsToggles: {},
 	assertion: {},

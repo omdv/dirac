@@ -1,7 +1,7 @@
 import { setTimeout as setTimeoutPromise } from "node:timers/promises"
 import { ApiHandler, ApiProviderInfo, buildApiHandler } from "@core/api"
 import { ApiStream } from "@core/api/transform/stream"
-import { parseAssistantMessageV2, ToolUse } from "@core/assistant-message"
+import { ToolUse } from "@core/assistant-message"
 import { ContextManager } from "@core/context/context-management/ContextManager"
 import { checkContextWindowExceededError } from "@core/context/context-management/context-error-handling"
 
@@ -28,6 +28,7 @@ import { CommandPermissionController } from "@core/permissions"
 
 import { formatResponse } from "@core/prompts/responses"
 import type { SystemPromptContext } from "@core/prompts/system-prompt"
+import { SkillMetadata } from "@/shared/skills"
 import { getSystemPrompt } from "@core/prompts/system-prompt"
 import { detectBestShell } from "@/utils/shell-detection"
 import { getAvailableCores } from "@/utils/os"
@@ -83,7 +84,7 @@ import * as path from "path"
 import { ulid } from "ulid"
 import { RuleContextBuilder } from "../context/instructions/user-instructions/RuleContextBuilder"
 
-import { discoverSkills, getAvailableSkills } from "../context/instructions/user-instructions/skills"
+import { getOrDiscoverSkills } from "../context/instructions/user-instructions/skills"
 
 import { Controller } from "../controller"
 
@@ -131,7 +132,7 @@ export class Task {
 	readonly taskId: string
 	readonly ulid: string
 	private taskIsFavorited?: boolean
-	private cwd: string
+	public cwd: string
 	private taskInitializationStartTime: number
 
 	taskState: TaskState
@@ -937,8 +938,7 @@ export class Task {
 		}
 
 		// Discover and filter available skills
-		const allSkills = await discoverSkills(this.cwd)
-		const resolvedSkills = getAvailableSkills(allSkills)
+		const resolvedSkills = await getOrDiscoverSkills(this.cwd, this.taskState)
 
 		// Filter skills by toggle state (enabled by default)
 		const globalSkillsToggles = this.stateManager.getGlobalSettingsKey("globalSkillsToggles") ?? {}
@@ -948,6 +948,8 @@ export class Task {
 			// If toggle exists, use it; otherwise default to enabled (true)
 			return toggles[skill.path] !== false
 		})
+
+		this.taskState.availableSkills = availableSkills
 
 		// Snapshot editor tabs so prompt tools can decide whether to include
 		// filetype-specific instructions (e.g. notebooks) without adding bespoke flags.
@@ -1553,7 +1555,7 @@ ${notice}`
 							assistantTextOnly += chunk.text
 							const prevLength = this.taskState.assistantMessageContent.length
 
-							this.taskState.assistantMessageContent = parseAssistantMessageV2(assistantMessage)
+							await this.processNativeToolCalls(assistantTextOnly, toolUseHandler.getPartialToolUsesAsContent())
 
 							if (this.taskState.assistantMessageContent.length > prevLength) {
 								this.taskState.userMessageContentReady = false
@@ -1727,7 +1729,7 @@ ${notice}`
 		userContent: DiracContent[],
 		includeFileDetails = false,
 		useCompactPrompt = false,
-	): Promise<[DiracContent[], string, boolean]> {
+	): Promise<[DiracContent[], string, boolean, SkillMetadata[]]> {
 		return this.contextLoader.loadContext(userContent, includeFileDetails, useCompactPrompt)
 	}
 

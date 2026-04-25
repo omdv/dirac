@@ -1,6 +1,7 @@
 import { SYSTEM_PROMPT } from "../template"
 import { TemplateEngine } from "../templates/TemplateEngine"
 import type { SystemPromptContext } from "../types"
+import { SkillMetadata } from "@/shared/skills"
 
 export class PromptBuilder {
 	private templateEngine: TemplateEngine
@@ -30,6 +31,12 @@ export class PromptBuilder {
 		const runtimePlaceholders = (this.context as any).runtimePlaceholders
 		if (runtimePlaceholders) {
 			Object.assign(placeholders, runtimePlaceholders)
+		}
+
+		if (this.context.skills && this.context.skills.length > 0) {
+			placeholders["SKILLS_SECTION"] = this.formatSkillsSection(this.context.skills)
+		} else {
+			placeholders["SKILLS_SECTION"] = ""
 		}
 
 		return placeholders
@@ -62,5 +69,29 @@ export class PromptBuilder {
 			})
 			.replace(/\n\s*\n\s*\n/g, "\n\n") // Clean up any multiple empty lines created by header removal
 			.trim() // Final trim
+	}
+
+
+	private formatSkillsSection(skills: SkillMetadata[]): string {
+		if (skills.length === 0) return ""
+
+		let section = "\n\n# AVAILABLE SKILLS\n"
+		section += "You have access to specialized skills. Use the 'use_skill' tool to activate one.\n\n"
+
+		// Prioritize Project skills
+		const projectSkills = skills.filter((s) => s.source === "project")
+		const globalSkills = skills.filter((s) => s.source === "global")
+
+		const displaySkills = [...projectSkills, ...globalSkills].slice(0, 10)
+
+		displaySkills.forEach((skill) => {
+			section += `- ${skill.name}: ${skill.description}\n`
+		})
+
+		if (skills.length > 10) {
+			section += `\n... and ${skills.length - 10} more. Use the 'list_skills' tool to see the full list.\n`
+		}
+
+		return section
 	}
 }

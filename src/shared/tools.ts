@@ -24,6 +24,7 @@ export enum DiracDefaultTool {
 	NEW_RULE = "new_rule",
 	GENERATE_EXPLANATION = "generate_explanation",
 	USE_SKILL = "use_skill",
+	LIST_SKILLS = "list_skills",
 	USE_SUBAGENTS = "use_subagents",
 	GET_FUNCTION = "get_function",
 	GET_FILE_SKELETON = "get_file_skeleton",
@@ -67,5 +68,6 @@ export const READ_ONLY_TOOLS = [
 	DiracDefaultTool.WEB_SEARCH,
 	DiracDefaultTool.WEB_FETCH,
 	DiracDefaultTool.USE_SKILL,
+	DiracDefaultTool.LIST_SKILLS,
 	DiracDefaultTool.USE_SUBAGENTS,
 ] as const

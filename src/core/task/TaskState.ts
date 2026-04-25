@@ -2,6 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { AssistantMessageContent } from "@core/assistant-message"
 import { DiracAskResponse } from "@shared/WebviewMessage"
 import type { HookExecution } from "./types/HookExecution"
+import { SkillMetadata } from "@/shared/skills"
 
 export class TaskState {
 	// Task-level timing
@@ -74,4 +75,7 @@ export class TaskState {
 	lastAutoCompactTriggerIndex?: number
 	taskLockAcquired = false
 	initialCheckpointCommitPromise?: Promise<string | undefined>
+	availableSkills: SkillMetadata[] = []
+	discoveredSkillsCache?: SkillMetadata[]
+
 }

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react"
 import { useMenuAnnouncement } from "@/shared/hooks/useMenuAnnouncement"
 import type { SlashCommand } from "@/shared/lib/slash-commands"
+import { SkillMetadata } from "@shared/skills"
 import { getMatchingSlashCommands } from "@/shared/lib/slash-commands"
 import ScreenReaderAnnounce from "@/shared/ui/ScreenReaderAnnounce"
 
@@ -14,6 +15,7 @@ interface SlashCommandMenuProps {
 	globalWorkflowToggles?: Record<string, boolean>
 	remoteWorkflowToggles?: Record<string, boolean>
 	remoteWorkflows?: any[]
+	availableSkills?: SkillMetadata[]
 }
 
 const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
@@ -26,6 +28,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 	globalWorkflowToggles = {},
 	remoteWorkflowToggles,
 	remoteWorkflows,
+	availableSkills = [],
 }) => {
 	const menuRef = useRef<HTMLDivElement>(null)
 
@@ -36,9 +39,11 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 		globalWorkflowToggles,
 		remoteWorkflowToggles,
 		remoteWorkflows,
+		availableSkills,
 	)
 	const defaultCommands = filteredCommands.filter((cmd) => cmd.section === "default" || !cmd.section)
 	const workflowCommands = filteredCommands.filter((cmd) => cmd.section === "custom")
+	const skillCommands = filteredCommands.filter((cmd) => cmd.section === "skill")
 
 	// Screen reader announcements
 	const getCommandLabel = useCallback((command: SlashCommand) => {
@@ -134,7 +139,8 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 				{filteredCommands.length > 0 ? (
 					<>
 						{renderCommandSection(defaultCommands, "Default Commands", 0, true)}
-						{renderCommandSection(workflowCommands, "Workflow Commands", defaultCommands.length, false)}
+						{renderCommandSection(skillCommands, "Skills", defaultCommands.length, true)}
+						{renderCommandSection(workflowCommands, "Workflow Commands", defaultCommands.length + skillCommands.length, false)}
 					</>
 				) : (
 					<div aria-selected="false" className="py-2 px-3 cursor-default flex flex-col" role="option">

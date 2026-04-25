@@ -130,6 +130,39 @@ export function getAvailableSkills(skills: SkillMetadata[]): SkillMetadata[] {
 /**
  * Get full skill content including instructions.
  */
+/**
+ * List supporting files (docs and scripts) in a skill directory.
+ */
+export async function listSupportingFiles(skillMdPath: string): Promise<{ docs: string[]; scripts: string[] }> {
+	const skillDir = path.dirname(skillMdPath)
+	const docsDir = path.join(skillDir, "docs")
+	const scriptsDir = path.join(skillDir, "scripts")
+
+	const docs: string[] = []
+	const scripts: string[] = []
+
+	try {
+		if (await fileExistsAtPath(docsDir)) {
+			const files = await fs.readdir(docsDir)
+			docs.push(...files.filter((f) => f.endsWith(".md") || f.endsWith(".txt")))
+		}
+	} catch (error) {
+		Logger.warn(`Failed to read docs directory for skill at ${skillDir}:`, error)
+	}
+
+	try {
+		if (await fileExistsAtPath(scriptsDir)) {
+			const files = await fs.readdir(scriptsDir)
+			scripts.push(...files.filter((f) => !f.startsWith(".")))
+		}
+	} catch (error) {
+		Logger.warn(`Failed to read scripts directory for skill at ${skillDir}:`, error)
+	}
+
+	return { docs, scripts }
+}
+
+
 export async function getSkillContent(skillName: string, availableSkills: SkillMetadata[]): Promise<SkillContent | null> {
 	const skill = availableSkills.find((s) => s.name === skillName)
 	if (!skill) return null
@@ -145,4 +178,22 @@ export async function getSkillContent(skillName: string, availableSkills: SkillM
 	} catch {
 		return null
 	}
+}
+
+/**
+ * Get skills from cache or discover them from disk if not already cached.
+ * This ensures we only scan the file system once per task.
+ */
+export async function getOrDiscoverSkills(
+	cwd: string,
+	cacheProvider: { discoveredSkillsCache?: SkillMetadata[] },
+): Promise<SkillMetadata[]> {
+	if (cacheProvider.discoveredSkillsCache) {
+		return cacheProvider.discoveredSkillsCache
+	}
+
+	const allSkills = await discoverSkills(cwd)
+	const resolvedSkills = getAvailableSkills(allSkills)
+	cacheProvider.discoveredSkillsCache = resolvedSkills
+	return resolvedSkills
 }

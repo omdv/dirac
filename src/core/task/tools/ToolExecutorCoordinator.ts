@@ -23,6 +23,7 @@ import { SearchFilesToolHandler } from "./handlers/SearchFilesToolHandler"
 import { UseSubagentsToolHandler } from "./handlers/SubagentToolHandler"
 import { SummarizeTaskHandler } from "./handlers/SummarizeTaskHandler"
 import { UseSkillToolHandler } from "./handlers/UseSkillToolHandler"
+import { ListSkillsToolHandler } from "./handlers/ListSkillsToolHandler"
 import { WebFetchToolHandler } from "./handlers/WebFetchToolHandler"
 import { WebSearchToolHandler } from "./handlers/WebSearchToolHandler"
 
@@ -106,6 +107,7 @@ export class ToolExecutorCoordinator {
 			new SharedToolHandler(DiracDefaultTool.NEW_RULE, new WriteToFileToolHandler(v)),
 		[DiracDefaultTool.GENERATE_EXPLANATION]: (_v: ToolValidator) => new GenerateExplanationToolHandler(),
 		[DiracDefaultTool.USE_SKILL]: (_v: ToolValidator) => new UseSkillToolHandler(),
+		[DiracDefaultTool.LIST_SKILLS]: (_v: ToolValidator) => new ListSkillsToolHandler(),
 		[DiracDefaultTool.USE_SUBAGENTS]: (_v: ToolValidator) => new UseSubagentsToolHandler(),
 	}
 

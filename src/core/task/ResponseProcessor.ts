@@ -314,10 +314,7 @@ export class ResponseProcessor {
 		}
 	}
 
-	public async processNativeToolCalls(assistantTextOnly: string, toolBlocks: ToolUse[]) {
-		if (!toolBlocks?.length) {
-			return
-		}
+	public async processNativeToolCalls(assistantTextOnly: string, toolBlocks: ToolUse[] = []) {
 		const prevLength = this.dependencies.taskState.assistantMessageContent.length
 
 		const parsedBlocks = parseAssistantMessageV2(assistantTextOnly)

@@ -1,4 +1,5 @@
 import { BASE_SLASH_COMMANDS, type SlashCommand, VSCODE_ONLY_COMMANDS } from "@shared/slashCommands"
+import { SkillMetadata } from "@shared/skills"
 import { PLATFORM_CONFIG, PlatformType } from "@/config/platform.config"
 
 export type { SlashCommand }
@@ -153,6 +154,7 @@ export function getMatchingSlashCommands(
 	globalWorkflowToggles: Record<string, boolean> = {},
 	remoteWorkflowToggles?: Record<string, boolean>,
 	remoteWorkflows?: any[],
+	availableSkills: SkillMetadata[] = [],
 ): SlashCommand[] {
 	const workflowCommands = getWorkflowCommands(
 		localWorkflowToggles,
@@ -160,7 +162,12 @@ export function getMatchingSlashCommands(
 		remoteWorkflowToggles,
 		remoteWorkflows,
 	)
-	const allCommands = [...DEFAULT_SLASH_COMMANDS, ...workflowCommands]
+	const skillCommands: SlashCommand[] = availableSkills.map((skill) => ({
+		name: skill.name,
+		description: skill.description,
+		section: "skill",
+	}))
+	const allCommands = [...DEFAULT_SLASH_COMMANDS, ...skillCommands, ...workflowCommands]
 
 	if (!query) {
 		return allCommands
@@ -203,6 +210,7 @@ export function validateSlashCommand(
 	globalWorkflowToggles: Record<string, boolean> = {},
 	remoteWorkflowToggles?: Record<string, boolean>,
 	remoteWorkflows?: any[],
+	availableSkills: SkillMetadata[] = [],
 ): "full" | "partial" | null {
 	if (!command) {
 		return null
@@ -214,7 +222,12 @@ export function validateSlashCommand(
 		remoteWorkflowToggles,
 		remoteWorkflows,
 	)
-	const allCommands = [...DEFAULT_SLASH_COMMANDS, ...workflowCommands]
+	const skillCommands: SlashCommand[] = availableSkills.map((skill) => ({
+		name: skill.name,
+		description: skill.description,
+		section: "skill",
+	}))
+	const allCommands = [...DEFAULT_SLASH_COMMANDS, ...skillCommands, ...workflowCommands]
 
 	// case insensitive matching
 	const exactMatch = allCommands.some((cmd) => cmd.name.toLowerCase() === command.toLowerCase())

@@ -1,5 +1,9 @@
 import type { ToolUse } from "@core/assistant-message"
-import { discoverSkills, getAvailableSkills, getSkillContent } from "@core/context/instructions/user-instructions/skills"
+import {
+	getOrDiscoverSkills,
+	getSkillContent,
+	listSupportingFiles
+} from "@core/context/instructions/user-instructions/skills"
 import type { SkillMetadata } from "@shared/skills"
 import { telemetryService } from "@/services/telemetry"
 import { DiracDefaultTool } from "@/shared/tools"
@@ -37,8 +41,7 @@ export class UseSkillToolHandler implements IToolHandler, IPartialBlockHandler {
 		}
 
 		// Discover skills on-demand (lazy loading)
-		const allSkills = await discoverSkills(config.cwd)
-		const resolvedSkills = getAvailableSkills(allSkills)
+		const resolvedSkills = await getOrDiscoverSkills(config.cwd, config.taskState)
 
 		// Filter by toggle state
 		const stateManager = config.services.stateManager
@@ -104,12 +107,24 @@ export class UseSkillToolHandler implements IToolHandler, IPartialBlockHandler {
 
 			)
 
-			return `# Skill "${skillContent.name}" is now active
+			const { docs, scripts } = await listSupportingFiles(skillContent.path)
+			let activationMessage = `# Skill "${skillContent.name}" is now active\n\n${skillContent.instructions}\n\n---\n`
+			activationMessage += `IMPORTANT: The skill is now loaded. Do NOT call use_skill again for this task. Simply follow the instructions above to complete the user's request.\n`
 
-${skillContent.instructions}
+			const skillDir = skillContent.path.replace(/SKILL\.md$/, "")
+			if (docs.length > 0 || scripts.length > 0) {
+				activationMessage += `\nYou may access supporting files in the skill directory: ${skillDir}\n`
+				if (docs.length > 0) {
+					activationMessage += `\nDocumentation available:\n${docs.map((f) => `- ${skillDir}docs/${f}`).join("\n")}\n`
+				}
+				if (scripts.length > 0) {
+					activationMessage += `\nScripts available (run via execute_command):\n${scripts.map((f) => `- ${skillDir}scripts/${f}`).join("\n")}\n`
+				}
+			} else {
+				activationMessage += `\nYou may access other files in the skill directory at: ${skillDir}`
+			}
 
----
-IMPORTANT: The skill is now loaded. Do NOT call use_skill again for this task. Simply follow the instructions above to complete the user's request. You may access other files in the skill directory at: ${skillContent.path.replace(/SKILL\.md$/, "")}`
+			return activationMessage
 		} catch (error) {
 			return `Error loading skill "${skillName}": ${(error as Error)?.message}`
 		}

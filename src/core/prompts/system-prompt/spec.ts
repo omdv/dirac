@@ -125,12 +125,16 @@ export function toolSpecFunctionDefinition(tool: DiracToolSpec, context: SystemP
 			name: tool.name,
 			description: replacer(tool.description, context),
 			strict: false,
-			parameters: {
-				type: "object",
-				properties,
-				required,
-				additionalProperties: false,
-			},
+			...(Object.keys(properties).length > 0
+				? {
+						parameters: {
+							type: "object",
+							properties,
+							required,
+							additionalProperties: false,
+						},
+				  }
+				: {}),
 		},
 	}
 
@@ -215,8 +219,7 @@ export function toolSpecInputSchema(tool: DiracToolSpec, context: SystemPromptCo
 		description: replacer(tool.description, context),
 		input_schema: {
 			type: "object",
-			properties,
-			required,
+			...(Object.keys(properties).length > 0 ? { properties, required } : {}),
 		},
 	}
 
@@ -340,11 +343,15 @@ export function toolSpecFunctionDeclarations(tool: DiracToolSpec, context: Syste
 	const googleTool: GoogleTool = {
 		name: tool.name,
 		description: replacer(tool.description, context),
-		parameters: {
-			type: GoogleToolParamType.OBJECT,
-			properties,
-			required,
-		},
+		...(Object.keys(properties).length > 0
+			? {
+					parameters: {
+						type: GoogleToolParamType.OBJECT,
+						properties,
+						required,
+					},
+			  }
+			: {}),
 	}
 	return googleTool
 }
@@ -360,8 +367,12 @@ export function openAIToolToAnthropic(openAITool: OpenAITool): AnthropicTool {
 			description: func.description || "",
 			input_schema: {
 				type: "object",
-				properties: func.parameters?.properties || {},
-				required: (func.parameters as any)?.required || [],
+				...(Object.keys(func.parameters?.properties || {}).length > 0
+					? {
+							properties: func.parameters?.properties,
+							required: (func.parameters as any)?.required || [],
+					  }
+					: {}),
 			},
 		}
 	}
@@ -409,11 +420,14 @@ export function toOpenAIResponsesAPITool(openAITool: OpenAITool): OpenAIResponse
 			name: fn.name,
 			description: fn.description || "",
 			strict: fn.strict || false,
-			parameters: {
-				type: "object",
-				properties: fn.parameters?.properties || {},
-				required: (fn.parameters?.required as string[]) || [],
-			},
+			parameters:
+				Object.keys(fn.parameters?.properties || {}).length > 0
+					? {
+							type: "object",
+							properties: fn.parameters?.properties,
+							required: (fn.parameters?.required as string[]) || [],
+					  }
+					: null,
 		} satisfies OpenAIResponseFunctionTool
 	}
 

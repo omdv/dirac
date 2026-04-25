@@ -11,6 +11,8 @@ import {
 	reportBugToolResponse,
 } from "../prompts/commands"
 import { StateManager } from "../storage/StateManager"
+import { getSkillContent } from "../context/instructions/user-instructions/skills"
+import { SkillMetadata } from "@/shared/skills"
 
 type FileBasedWorkflow = {
 	fullPath: string
@@ -37,6 +39,7 @@ export async function parseSlashCommands(
 	globalWorkflowToggles: DiracRulesToggles,
 	ulid: string,
 	providerInfo?: ApiProviderInfo,
+	availableSkills: SkillMetadata[] = []
 ): Promise<{ processedText: string; needsDiracrulesFileCheck: boolean }> {
 	const SUPPORTED_DEFAULT_COMMANDS = ["newtask", "smol", "compact", "newrule", "reportbug", "explain-changes"]
 
@@ -188,6 +191,36 @@ export async function parseSlashCommands(
 					return { processedText, needsDiracrulesFileCheck: false }
 				} catch (error) {
 					Logger.error(`Error reading workflow file ${matchingWorkflow.fullPath}: ${error}`)
+				}
+			}
+
+			// Check if the command matches any enabled skill
+			const matchingSkill = availableSkills.find((skill) => skill.name === commandName)
+			if (matchingSkill) {
+				try {
+					const skillContent = await getSkillContent(matchingSkill.name, availableSkills)
+					if (skillContent) {
+						// remove the slash command and add custom instructions at the top of this message
+						const textWithoutSlashCommand = removeSlashCommand(text, tagContent, contentStartIndex, slashMatch)
+						let processedText = `<explicit_instructions type="skill" name="${skillContent.name}">\n${skillContent.instructions}\n</explicit_instructions>\n`
+
+						// Check if the content of the tag we matched is now empty
+						const newTagContentMatch = regexObj.exec(textWithoutSlashCommand)
+						const newTagContent = newTagContentMatch ? newTagContentMatch[1].trim() : ""
+
+						if (!newTagContent) {
+							processedText += `\n(Note: The user has explicitly activated the "${skillContent.name}" skill via a slash command. This skill is now active. Please acknowledge its activation, summarize how you can help based on its instructions, and ask the user for the specific target or task they want you to perform, or propose a first step if appropriate.)\n`
+						}
+
+						processedText += textWithoutSlashCommand
+
+						// Track telemetry for skill command usage
+						telemetryService.captureSlashCommandUsed(ulid, commandName, "skill")
+
+						return { processedText, needsDiracrulesFileCheck: false }
+					}
+				} catch (error) {
+					Logger.error(`Error loading skill ${matchingSkill.name}: ${error}`)
 				}
 			}
 		}

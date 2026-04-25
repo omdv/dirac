@@ -1,4 +1,5 @@
 import { DiracContent } from "@shared/messages/content"
+import { SkillMetadata } from "@shared/skills"
 import { ApiHandler, ApiProviderInfo } from "../../../core/api"
 import { DiffViewProvider } from "../../../integrations/editor/DiffViewProvider"
 import { ContextManager } from "../../context/context-management/ContextManager"
@@ -29,8 +30,8 @@ export interface ApiConversationManagerDependencies {
 	loadContext: (
 		userContent: DiracContent[],
 		includeFileDetails?: boolean,
-		useCompactPrompt?: boolean,
-	) => Promise<[DiracContent[], string, boolean]>
+		useCompactPrompt?: boolean
+	) => Promise<[DiracContent[], string, boolean, SkillMetadata[]]>
 	getCurrentProviderInfo: () => ApiProviderInfo
 	getEnvironmentDetails: (includeFileDetails?: boolean) => Promise<string>
 	writePromptMetadataArtifacts: (params: {

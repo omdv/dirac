@@ -1,6 +1,7 @@
 import { EmptyRequest } from "@shared/proto/dirac/common"
 import { SlashCommandInfo, SlashCommandsResponse } from "@shared/proto/dirac/slash"
 import { BASE_SLASH_COMMANDS } from "@/shared/slashCommands"
+import { getOrDiscoverSkills } from "@/core/context/instructions/user-instructions/skills"
 import { Controller } from ".."
 
 /**
@@ -72,6 +73,26 @@ export async function getAvailableSlashCommands(controller: Controller, _request
 					name: workflow.name,
 					description: `Remote workflow: ${workflow.name}`,
 					section: "custom",
+					cliCompatible: true,
+				}),
+			)
+		}
+	}
+
+	// Add skills
+	const cwd = (controller.task as any)?.cwd || controller.getWorkspaceManager()?.getPrimaryRoot()?.path || process.cwd()
+	const discoveredSkills = await getOrDiscoverSkills(cwd, controller.task?.taskState || {})
+	const globalSkillsToggles = controller.stateManager.getGlobalSettingsKey("globalSkillsToggles") ?? {}
+	const localSkillsToggles = controller.stateManager.getWorkspaceStateKey("localSkillsToggles") ?? {}
+
+	for (const skill of discoveredSkills) {
+		const toggles = skill.source === "global" ? globalSkillsToggles : localSkillsToggles
+		if (toggles[skill.path] !== false) {
+			commands.push(
+				SlashCommandInfo.create({
+					name: skill.name,
+					description: skill.description,
+					section: "skill",
 					cliCompatible: true,
 				}),
 			)

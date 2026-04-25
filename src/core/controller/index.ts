@@ -37,19 +37,16 @@ import { PromptRegistry } from "../prompts/system-prompt"
 import { ensureCacheDirectoryExists, GlobalFileNames } from "../storage/disk"
 import { type PersistenceErrorEvent, StateManager } from "../storage/StateManager"
 import { Task } from "../task"
+import { getOrDiscoverSkills } from "../context/instructions/user-instructions/skills"
 import { getDiracOnboardingModels } from "./models/getDiracOnboardingModels"
 import { appendDiracStealthModels } from "./models/refreshOpenRouterModels"
 import { checkCliInstallation } from "./state/checkCliInstallation"
 import { sendStateUpdate } from "./state/subscribeToState"
 import { sendChatButtonClickedEvent } from "./ui/subscribeToChatButtonClicked"
-
-/*
-https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
-
-https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
-*/
+import { SkillMetadata } from "@/shared/skills"
 
 export class Controller {
+	public discoveredSkillsCache: SkillMetadata[] = []
 	task?: Task
 	readonly stateManager: StateManager
 
@@ -108,6 +105,11 @@ export class Controller {
 		// Check CLI installation status once on startup
 		checkCliInstallation(this)
 
+		// Initialize workspace manager in background
+		this.ensureWorkspaceManager().then(() => {
+			this.postStateToWebview()
+		})
+
 		Logger.log("[Controller] DiracProvider instantiated")
 	}
 
@@ -148,14 +150,6 @@ export class Controller {
 		if (isNewUser && !historyItem && taskHistory && taskHistory.length >= NEW_USER_TASK_COUNT_THRESHOLD) {
 			this.stateManager.setGlobalState("isNewUser", false)
 			await this.postStateToWebview()
-		}
-
-		if (autoApprovalSettings) {
-			const updatedAutoApprovalSettings = {
-				...autoApprovalSettings,
-				version: (autoApprovalSettings.version ?? 1) + 1,
-			}
-			this.stateManager.setGlobalState("autoApprovalSettings", updatedAutoApprovalSettings)
 		}
 
 		// Initialize and persist the workspace manager (multi-root or single-root) with telemetry + fallback
@@ -609,6 +603,10 @@ export class Controller {
 		const localAgentsRulesToggles = this.stateManager.getWorkspaceStateKey("localAgentsRulesToggles")
 		const workflowToggles = this.stateManager.getWorkspaceStateKey("workflowToggles")
 
+		const workspaceManager = await this.ensureWorkspaceManager()
+		const cwd = (this.task as any)?.cwd || workspaceManager?.getPrimaryRoot()?.path || process.cwd()
+		const availableSkills = await getOrDiscoverSkills(cwd, this.task?.taskState || (this as any))
+
 		const primaryRootPath = this.workspaceManager?.getPrimaryRoot()?.path
 		const currentTaskItem = this.task?.taskId ? (taskHistory || []).find((item) => item.id === this.task?.taskId) : undefined
 		// Spread to create new array reference - React needs this to detect changes in useEffect dependencies
@@ -714,6 +712,7 @@ export class Controller {
 			welcomeBanners,
 			openAiCodexIsAuthenticated,
 			openAiCodexEmail,
+			availableSkills,
 		}
 	}
 
@@ -725,24 +724,6 @@ export class Controller {
 		await this.task?.abortTask()
 		this.task = undefined // removes reference to it, so once promises end it will be garbage collected
 	}
-
-	// Caching mechanism to keep track of webview messages + API conversation history per provider instance
-
-	/*
-	Now that we use retainContextWhenHidden, we don't have to store a cache of dirac messages in the user's state, but we could to reduce memory footprint in long conversations.
-
-	- We have to be careful of what state is shared between DiracProvider instances since there could be multiple instances of the extension running at once. For example when we cached dirac messages using the same key, two instances of the extension could end up using the same key and overwriting each other's messages.
-	- Some state does need to be shared between the instances, i.e. the API key--however there doesn't seem to be a good way to notify the other instances that the API key has changed.
-
-	We need to use a unique identifier for each DiracProvider instance's message cache since we could be running several instances of the extension outside of just the sidebar i.e. in editor panels.
-
-	// conversation history to send in API requests
-
-	/*
-	It seems that some API messages do not comply with vscode state requirements. Either the Anthropic library is manipulating these values somehow in the backend in a way that's creating cyclic references, or the API returns a function or a Symbol as part of the message content.
-	VSCode docs about state: "The value must be JSON-stringifyable ... value — A value. MUST not contain cyclic references."
-	For now we'll store the conversation history in memory, and if we need to store in state directly we'd need to do a manual conversion to ensure proper json stringification.
-	*/
 
 	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
 		const history = this.stateManager.getGlobalStateKey("taskHistory")

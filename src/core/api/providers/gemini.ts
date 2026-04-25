@@ -284,29 +284,26 @@ export class GeminiHandler implements ApiHandler {
 					}
 					if (part.functionCall) {
 						const functionCall = part.functionCall
-						const args = Object.entries(functionCall.args || {}).filter(([_key, val]) => !!val)
-						if (functionCall.args && args.length > 0) {
-							const existingId = functionCall.id?.trim()
-							const toolCallId =
-								existingId ??
-								(() => {
-									const sequenceNumber = responseToolCallCount.get(responseKey) ?? 0
-									responseToolCallCount.set(responseKey, sequenceNumber + 1)
-									return `${responseKey}-tool-${sequenceNumber}`
-								})()
-							yield {
-								type: "tool_calls",
-								id: chunk.responseId,
-								tool_call: {
-									call_id: toolCallId,
-									function: {
-										id: toolCallId,
-										name: functionCall.name,
-										arguments: JSON.stringify(functionCall.args),
-									},
+						const existingId = functionCall.id?.trim()
+						const toolCallId =
+							existingId ??
+							(() => {
+								const sequenceNumber = responseToolCallCount.get(responseKey) ?? 0
+								responseToolCallCount.set(responseKey, sequenceNumber + 1)
+								return `${responseKey}-tool-${sequenceNumber}`
+							})()
+						yield {
+							type: "tool_calls",
+							id: chunk.responseId,
+							tool_call: {
+								call_id: toolCallId,
+								function: {
+									id: toolCallId,
+									name: functionCall.name,
+									arguments: JSON.stringify(functionCall.args || {}),
 								},
-								signature: signature,
-							}
+							},
+							signature: signature,
 						}
 					}
 				}

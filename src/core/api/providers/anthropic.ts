@@ -206,6 +206,18 @@ export class AnthropicHandler implements ApiHandler {
 								lastStartedToolCall.id = chunk.content_block.id
 								lastStartedToolCall.name = chunk.content_block.name
 								lastStartedToolCall.arguments = ""
+
+								yield {
+									type: "tool_calls",
+									tool_call: {
+										call_id: lastStartedToolCall.id,
+										function: {
+											id: lastStartedToolCall.id,
+											name: lastStartedToolCall.name,
+											arguments: "",
+										},
+									},
+								}
 							}
 							break
 						case "text":
@@ -250,7 +262,7 @@ export class AnthropicHandler implements ApiHandler {
 							}
 							break
 						case "input_json_delta":
-							if (lastStartedToolCall.id && lastStartedToolCall.name && chunk.delta.partial_json) {
+							if (lastStartedToolCall.id && lastStartedToolCall.name && chunk.delta.partial_json !== undefined) {
 								// 	// Convert Anthropic tool_use to OpenAI-compatible format
 								yield {
 									type: "tool_calls",

@@ -47,7 +47,7 @@ export class ToolCallProcessor {
 			}
 
 			// Only yield when we have all required fields: id, name, and arguments
-			if (toolCallState.id && toolCallState.name && toolCallDelta.function?.arguments) {
+			if (toolCallState.id && toolCallState.name && toolCallDelta.function?.arguments !== undefined) {
 				yield {
 					type: "tool_calls",
 					tool_call: {

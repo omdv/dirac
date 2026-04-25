@@ -4,6 +4,7 @@ import { WorkspaceRoot } from "@shared/multi-root/types"
 import type { Environment } from "../config"
 import { AutoApprovalSettings } from "./AutoApprovalSettings"
 import { ApiConfiguration } from "./api"
+import { SkillMetadata } from "./skills"
 import { BrowserSettings } from "./BrowserSettings"
 import { DiracFeatureSetting } from "./DiracFeatureSetting"
 import { BannerCardData } from "./dirac/banner"
@@ -104,6 +105,7 @@ export interface ExtensionState {
 	optOutOfRemoteConfig?: boolean
 	doubleCheckCompletionEnabled?: boolean
 	banners?: BannerCardData[]
+	availableSkills?: SkillMetadata[]
 	welcomeBanners?: BannerCardData[]
 	openAiCodexIsAuthenticated?: boolean
 	openAiCodexEmail?: string
@@ -212,6 +214,7 @@ export interface DiracSayTool {
 	| "webSearch"
 	| "summarizeTask"
 	| "useSkill"
+	| "listSkills"
 	| "editFile"
 	| "edit_file"
 	| "getFunction"

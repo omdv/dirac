@@ -2,7 +2,7 @@ import * as path from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
 import type { ApiHandler, buildApiHandler } from "@core/api"
 import { parseAssistantMessageV2, ToolParamName, ToolUse } from "@core/assistant-message"
-import { discoverSkills, getAvailableSkills } from "@core/context/instructions/user-instructions/skills"
+import { getOrDiscoverSkills } from "@core/context/instructions/user-instructions/skills"
 import { formatResponse } from "@core/prompts/responses"
 import { PromptRegistry } from "@core/prompts/system-prompt"
 import type { SystemPromptContext } from "@core/prompts/system-prompt/types"
@@ -343,8 +343,7 @@ export class SubagentRunner {
 			stats.contextWindow = providerInfo.model.info.contextWindow || 0
 
 			const host = HostRegistryInfo.get()
-			const discoveredSkills = await discoverSkills(this.baseConfig.cwd)
-			const availableSkills = getAvailableSkills(discoveredSkills)
+			const availableSkills = await getOrDiscoverSkills(this.baseConfig.cwd, this.baseConfig.taskState)
 			const configuredSkillNames = this.agent.getConfiguredSkills()
 			const skills =
 				configuredSkillNames !== undefined

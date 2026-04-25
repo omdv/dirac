@@ -19,6 +19,7 @@ import { search_files } from "./search_files"
 import { subagent } from "./subagent"
 import { summarize_task } from "./summarize_task"
 import { use_skill } from "./use_skill"
+import { list_skills } from "./list_skills"
 import { web_fetch } from "./web_fetch"
 import { web_search } from "./web_search"
 import { write_to_file } from "./write_to_file"
@@ -50,6 +51,7 @@ export function registerDiracToolSets(): void {
 		search_files,
 		subagent,
 		use_skill,
+		list_skills,
 		web_fetch,
 		web_search,
 		write_to_file,

@@ -47,7 +47,7 @@ const GeneralSettingsSection = ({ renderSectionHeader }: GeneralSettingsSectionP
 						ever sent. See our{" "}
 						<VSCodeLink
 							className="text-inherit"
-							href="https://docs.dirac.run/more-info/telemetry"
+							href="https://dirac.run/docs/more-info/telemetry"
 							style={{ fontSize: "inherit", textDecoration: "underline" }}>
 							telemetry overview
 						</VSCodeLink>{" "}

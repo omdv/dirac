@@ -502,7 +502,7 @@ const DiracRulesToggleModal: React.FC = () => {
 									to include context and preferences for your projects or globally for every conversation.{" "}
 									<VSCodeLink
 										className="text-xs"
-										href="https://docs.dirac.run/features/dirac-rules"
+										href="https://dirac.run/docs/features/dirac-rules"
 										style={{ display: "inline", fontSize: "inherit" }}>
 										Docs
 									</VSCodeLink>
@@ -514,7 +514,7 @@ const DiracRulesToggleModal: React.FC = () => {
 									<span className="text-foreground font-bold">/workflow-name</span> in the chat.{" "}
 									<VSCodeLink
 										className="text-xs inline"
-										href="https://docs.dirac.run/features/slash-commands/workflows">
+										href="https://dirac.run/docs/features/slash-commands/workflows">
 										Docs
 									</VSCodeLink>
 								</p>
@@ -685,7 +685,7 @@ const DiracRulesToggleModal: React.FC = () => {
 											: "Toggle to enable/disable (chmod +x/-x)."}{" "}
 										<VSCodeLink
 											className="text-xs"
-											href="https://docs.dirac.run/features/hooks"
+											href="https://dirac.run/docs/features/hooks"
 											style={{ display: "inline", fontSize: "inherit" }}>
 											Docs
 										</VSCodeLink>

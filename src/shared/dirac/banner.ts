@@ -143,7 +143,7 @@ export const BANNER_DATA: BannerCardData[] = [
 		icon: "book-open",
 		title: "Jupyter Notebooks",
 		description:
-			"Comprehensive AI-assisted editing of `.ipynb` files with full cell-level context awareness. [Learn More →](https://docs.dirac.run/features/jupyter-notebooks)",
+			"Comprehensive AI-assisted editing of `.ipynb` files with full cell-level context awareness. [Learn More →](https://dirac.run/docs/features/jupyter-notebooks)",
 	},
 
 	// Platform-specific banner (Windows)
@@ -153,7 +153,7 @@ export const BANNER_DATA: BannerCardData[] = [
 		title: "Dirac CLI Info",
 		platforms: ["windows"] satisfies BannerCardData["platforms"],
 		description:
-			"Available for macOS and Linux. Coming soon to other platforms. [Learn more](https://docs.dirac.run/dirac-cli/overview)",
+			"Available for macOS and Linux. Coming soon to other platforms. [Learn more](https://dirac.run/docs/dirac-cli/overview)",
 	},
 
 	// Info banner with inline link
@@ -162,6 +162,6 @@ export const BANNER_DATA: BannerCardData[] = [
 		icon: "lightbulb",
 		title: "Use Dirac in Right Sidebar",
 		description:
-			"For the best experience, drag the Dirac icon to your right sidebar. This keeps your file explorer and editor visible while you chat with Dirac, making it easier to navigate your codebase and see changes in real-time. [See how →](https://docs.dirac.run/features/customization/opening-dirac-in-sidebar)",
+			"For the best experience, drag the Dirac icon to your right sidebar. This keeps your file explorer and editor visible while you chat with Dirac, making it easier to navigate your codebase and see changes in real-time. [See how →](https://dirac.run/docs/features/customization/opening-dirac-in-sidebar)",
 	},
 ]

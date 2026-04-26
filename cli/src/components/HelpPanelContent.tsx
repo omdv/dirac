@@ -95,7 +95,7 @@ export const HelpPanelContent: React.FC<HelpPanelContentProps> = ({ onClose }) =
 				</Box>
 
 				<Text>
-					For more help: <Text color={COLORS.primaryBlue}>https://docs.dirac.run/dirac</Text>
+					For more help: <Text color={COLORS.primaryBlue}>https://dirac.run/docs/dirac</Text>
 				</Text>
 			</Box>
 		</Panel>

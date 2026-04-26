@@ -41,7 +41,7 @@ const AboutSection = ({ version, renderSectionHeader }: AboutSectionProps) => {
 
 					<h3 className="text-md font-semibold">Resources</h3>
 					<p>
-						<VSCodeLink href="https://docs.dirac.run/">Documentation</VSCodeLink>
+						<VSCodeLink href="https://dirac.run/docs/">Documentation</VSCodeLink>
 						{" • "}
 						<VSCodeLink href="https://dirac.run/">https://dirac.run</VSCodeLink>
 					</p>
